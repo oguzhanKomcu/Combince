@@ -1,0 +1,30 @@
+<Solution>
+  <Folder Name="/src/" />
+  <Folder Name="/src/Gateway/">
+    <Project Path="src/Gateway/Combince.Gateway/Combince.Gateway.csproj" Id="fdc3f8c3-a258-4d2e-9dd3-67095b35877d" />
+  </Folder>
+  <Folder Name="/src/Host/">
+    <Project Path="src/Host/Combince.Host.Api/Combince.Host.Api.csproj" Id="cbc3352a-db20-4cbc-8d9f-2e6fb1d72b25" />
+  </Folder>
+  <Folder Name="/src/Modules/" />
+  <Folder Name="/src/Modules/Interactions/">
+    <Project Path="src/Modules/Interactions/Combince.Modules.Interactions.Core/Combince.Modules.Interactions.Core.csproj" Id="5df76611-0137-4501-962d-87520a22d469" />
+    <Project Path="src/Modules/Interactions/Combince.Modules.Interactions.Infrastructure/Combince.Modules.Interactions.Infrastructure.csproj" Id="bf755b18-17bd-4335-b159-aa15b35816cd" />
+  </Folder>
+  <Folder Name="/src/Modules/Posts/">
+    <Project Path="src/Modules/Posts/Combince.Modules.Posts.Core/Combince.Modules.Posts.Core.csproj" Id="ed704c65-d1e6-4a3b-9254-1c2dfcf7ad21" />
+    <Project Path="src/Modules/Posts/Combince.Modules.Posts.Infrastructure/Combince.Modules.Posts.Infrastructure.csproj" Id="f8b2e16d-fe53-468d-b562-c2cd93445b30" />
+  </Folder>
+  <Folder Name="/src/Modules/Ratings/">
+    <Project Path="src/Modules/Ratings/Combince.Modules.Ratings.Core/Combince.Modules.Ratings.Core.csproj" Id="4bd69220-6bfe-458a-82bc-0717e4ae0ec9" />
+    <Project Path="src/Modules/Ratings/Combince.Modules.Ratings.Infrastructure/Combince.Modules.Ratings.Infrastructure.csproj" Id="61179461-5394-47df-af66-89e294e546b1" />
+  </Folder>
+  <Folder Name="/src/Modules/Users/">
+    <Project Path="src/Modules/Users/Combince.Modules.Users.Core/Combince.Modules.Users.Core.csproj" Id="f592cf7b-cfa4-44dd-a0b5-e7271f8a8951" />
+    <Project Path="src/Modules/Users/Combince.Modules.Users.Infrastructure/Combince.Modules.Users.Infrastructure.csproj" Id="95f862f9-f77e-47e9-90df-fea636e04399" />
+  </Folder>
+  <Folder Name="/src/Shared/">
+    <Project Path="src/Shared/Combince.Shared.Core/Combince.Shared.Core.csproj" Id="da216ed8-2312-4ccf-8e87-86ef7e941ea4" />
+    <Project Path="src/Shared/Combince.Shared.Infrastructure/Combince.Shared.Infrastructure.csproj" Id="427def84-f801-4bdc-a9c9-343b8ccd7a71" />
+  </Folder>
+</Solution>
