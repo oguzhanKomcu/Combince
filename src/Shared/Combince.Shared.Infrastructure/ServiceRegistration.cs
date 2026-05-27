@@ -42,7 +42,10 @@ public static class ServiceRegistration
         // 4. MassTransit In-Memory Event Bus Ayarı
         services.AddMassTransit(x =>
         {
-            x.AddConsumers(AppDomain.CurrentDomain.GetAssemblies());
+            // Tüm assembly'leri körü körüne taramak yerine, sadece "Combince" ile başlayan projeleri tara diyoruz
+            x.AddConsumers(AppDomain.CurrentDomain.GetAssemblies()
+                .Where(a => a.FullName != null && a.FullName.StartsWith("Combince"))
+                .ToArray());
 
             x.UsingInMemory((context, cfg) =>
             {

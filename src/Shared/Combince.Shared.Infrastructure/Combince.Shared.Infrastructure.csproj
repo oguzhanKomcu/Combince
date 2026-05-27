@@ -10,6 +10,7 @@
     <PackageReference Include="MassTransit" Version="9.1.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.8" />
     <PackageReference Include="MongoDB.Driver" Version="3.8.1" />
+    <PackageReference Include="SharpCompress" Version="0.37.2" />
     <PackageReference Include="StackExchange.Redis" Version="2.13.1" />
     <PackageReference Include="ZiggyCreatures.FusionCache" Version="2.6.0" />
     <PackageReference Include="ZiggyCreatures.FusionCache.Serialization.NewtonsoftJson" Version="2.6.0" />
