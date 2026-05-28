@@ -34,7 +34,12 @@ namespace Combince.Modules.Users.Infrastructure.Persistence
 
             modelBuilder.Entity<UserRefreshToken>(entity =>
             {
+                entity.ToTable("UserRefreshTokens", "users");
+
                 entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id)
+                      .ValueGeneratedOnAdd(); 
+
                 entity.Property(e => e.Token).IsRequired();
 
                 entity.HasOne<User>()
@@ -42,6 +47,12 @@ namespace Combince.Modules.Users.Infrastructure.Persistence
                     .HasForeignKey(e => e.UserId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
+
+
+            modelBuilder.Entity<User>()
+                .Navigation(b => b.RefreshTokens)
+                .HasField("_refreshTokens")
+                .UsePropertyAccessMode(PropertyAccessMode.Field);
         }
     }
 }

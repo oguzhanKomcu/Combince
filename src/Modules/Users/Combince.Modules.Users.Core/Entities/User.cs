@@ -39,9 +39,11 @@ public class User
 
     public void AddRefreshToken(string token, DateTime expiresAt)
     {
-        if (_refreshTokens.Any(t => t.Token == token)) return;
+        if (_refreshTokens.Any(t => t.Token == token))
+            return;
+        var newRefreshToken = new UserRefreshToken(Guid.Empty, this.Id, token, expiresAt);
 
-        _refreshTokens.Add(new UserRefreshToken(Guid.NewGuid(), Id, token, expiresAt));
+        _refreshTokens.Add(newRefreshToken);
     }
 
     public void RevokeAllRefreshTokens()

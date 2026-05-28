@@ -11,7 +11,6 @@ public class UserRefreshToken
         Token = token;
         ExpiresAt = expiresAt;
         CreatedAt = DateTime.UtcNow;
-        IsRevoked = false;
     }
 
     public Guid Id { get; private set; }
@@ -19,13 +18,11 @@ public class UserRefreshToken
     public string Token { get; private set; }
     public DateTime ExpiresAt { get; private set; }
     public DateTime CreatedAt { get; private set; }
-    public bool IsRevoked { get; private set; }
-
     public bool IsExpired => DateTime.UtcNow >= ExpiresAt;
-    public bool IsActive => !IsRevoked && !IsExpired;
+    public bool IsActive => !IsExpired;
 
     public void Revoke()
     {
-        IsRevoked = true;
+        ExpiresAt = DateTime.UtcNow;
     }
 }
