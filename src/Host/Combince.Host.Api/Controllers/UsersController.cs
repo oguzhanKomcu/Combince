@@ -1,6 +1,7 @@
 ﻿using System.Security.Claims;
 using Combince.Modules.Users.Core.Features.Users.Commands.LoginUser;
 using Combince.Modules.Users.Core.Features.Users.Commands.RegisterUser;
+using Combince.Modules.Users.Core.Features.Users.Commands.RefreshTokenUser; // Yeni komutun isim uzayı
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -9,7 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Combince.Host.Api.Controllers;
 
 /// <summary>
-/// Kullanıcı kayıt, giriş ve profil işlemlerini yöneten merkezi API kontrolör sınıfı.
+/// Kullanıcı kayıt, giriş, profil ve oturum yenileme işlemlerini yöneten merkezi API kontrolör sınıfı.
 /// </summary>
 [ApiController]
 [Route("api/users")]
@@ -17,7 +18,7 @@ public class UsersController : ControllerBase
 {
     private readonly IMediator _mediator;
 
-    public  UsersController(IMediator mediator)
+    public UsersController(IMediator mediator)
     {
         _mediator = mediator;
     }
@@ -53,6 +54,23 @@ public class UsersController : ControllerBase
     }
 
     /// <summary>
+    /// Süresi dolmuş Access Token ve mevcut Refresh Token'ı doğrulayarak kullanıcıya yepyeni bir token paketi sunar.
+    /// </summary>
+    /// <param name="command">Eski Access Token ve veritabanında eşleşecek Refresh Token bilgilerini içeren komut nesnesi.</param>
+    /// <param name="cancellationToken">İşlem iptal token'ı.</param>
+    /// <returns>Yeni üretilen <see cref="LoginResponse"/> (Access ve Refresh Token) paketini döner.</returns>
+    [HttpPost("refresh-token")]
+    [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenUserCommand command, CancellationToken cancellationToken)
+    {
+        // İstek doğrudan MediatR üzerinden Core/Application katmanındaki Handler'a uçuyor
+        var response = await _mediator.Send(command, cancellationToken);
+        return Ok(response);
+    }
+
+    /// <summary>
     /// Sadece geçerli bir JWT Access Token'a sahip olan kullanıcının kendi profil bilgilerini getirmesini sağlar.
     /// </summary>
     /// <returns>İstekte bulunan aktif kullanıcının sistemdeki profil detaylarını döner.</returns>
@@ -65,9 +83,8 @@ public class UsersController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public IActionResult GetProfile()
     {
-
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        
+
         if (string.IsNullOrEmpty(userIdClaim))
         {
             return Unauthorized("Token içinde geçerli bir kullanıcı kimliği bulunamadı.");
