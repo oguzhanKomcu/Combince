@@ -1,7 +1,9 @@
 ﻿using Combince.Modules.Users.Core.Abstractions;
 using Combince.Modules.Users.Core.Features.Users.Commands.RegisterUser;
 using Combince.Modules.Users.Infrastructure.Persistence;
+using Combince.Modules.Users.Infrastructure.PipelineBehaviors;
 using Combince.Modules.Users.Infrastructure.Security;
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,7 +24,12 @@ public static class UsersModuleExtensions
         services.AddMediatR(cfg =>
         {
             cfg.RegisterServicesFromAssembly(typeof(RegisterUserCommand).Assembly);
+
+            // MODÜLE ÖZEL VALIDATION PIPELINE BEHAVIOR ENJEKSİYONU
+            cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
         });
+
+        services.AddValidatorsFromAssembly(typeof(RegisterUserCommand).Assembly);
 
         return services;
     }
