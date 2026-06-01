@@ -1,31 +1,24 @@
 using Combince.Host.Api.Extensions;
 using Combince.Host.Api.Middlewares;
+using Combince.Modules.Users.Core.Abstractions;
 using Combince.Modules.Users.Infrastructure;
+using Combince.Modules.Users.Infrastructure.Services;
 using Combince.Shared.Infrastructure;
 using Microsoft.OpenApi;
 using Serilog;
 using System.Text;
 
-// ==========================================
-// 1. LOGLAMA VE BUILDER YAPILANDIRMASI
-// ==========================================
-
 var builder = WebApplication.CreateBuilder(args);
 
-// Uygulama genelinde kurumsal loglama altyapısı olarak Serilog yapılandırılıyor
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
     .CreateLogger();
 
 builder.Host.UseSerilog();
-
+builder.Services.AddMemoryCache();
+builder.Services.AddScoped<ITokenBlacklistService, TokenBlacklistService>();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-
-// ==========================================
-// 2. .NET 10 / SWASHBUCKLE SWAGGER AYARLARI
-// ==========================================
-
 builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo
@@ -59,7 +52,7 @@ var app = builder.Build();
 
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
-
+app.UseMiddleware<TokenBlacklistMiddleware>();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

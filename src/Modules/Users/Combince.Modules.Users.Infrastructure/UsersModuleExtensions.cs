@@ -25,7 +25,6 @@ public static class UsersModuleExtensions
         {
             cfg.RegisterServicesFromAssembly(typeof(RegisterUserCommand).Assembly);
 
-            // MODÜLE ÖZEL VALIDATION PIPELINE BEHAVIOR ENJEKSİYONU
             cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
         });
 

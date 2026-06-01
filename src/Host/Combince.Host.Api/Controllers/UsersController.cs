@@ -1,11 +1,13 @@
-﻿using System.Security.Claims;
-using Combince.Modules.Users.Core.Features.Users.Commands.LoginUser;
-using Combince.Modules.Users.Core.Features.Users.Commands.RegisterUser;
+﻿using Combince.Modules.Users.Core.Features.Users.Commands.LoginUser;
+using Combince.Modules.Users.Core.Features.Users.Commands.LogoutUser;
 using Combince.Modules.Users.Core.Features.Users.Commands.RefreshTokenUser; // Yeni komutun isim uzayı
+using Combince.Modules.Users.Core.Features.Users.Commands.RegisterUser;
+using Combince.Modules.Users.Core.Features.Users.Commands.UpdatePassword;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace Combince.Host.Api.Controllers;
 
@@ -91,5 +93,65 @@ public class UsersController : ControllerBase
         }
 
         return Ok(new { Message = "Token geçerli! Profil kapısı açıldı.", AuthenticatedUserId = Guid.Parse(userIdClaim) });
+    }
+
+    /// <summary>
+    /// Aktif oturum sahibi kullanıcının mevcut şifresini doğrulatıp yeni bir şifre belirlemesini sağlar.
+    /// </summary>
+    /// <param name="command">Mevcut ve yeni şifre bilgilerini içeren nesne.</param>
+    /// <param name="cancellationToken">İşlem iptal token'ı.</param>
+    /// <response code="200">Şifre başarıyla güncellendi.</response>
+    /// <response code="400">Doğrulama hatası veya geçersiz şifre durumu.</response>
+    /// <response code="401">Yetkisiz erişim (Token eksik veya geçersiz).</response>
+    [Authorize]
+    [HttpPut("update-password")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> UpdatePassword([FromBody] UpdatePasswordCommand command, CancellationToken cancellationToken)
+    {
+        // Token içinden NameIdentifier (User ID) değerini güvenle söküyoruz
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdClaim))
+        {
+            return Unauthorized("Geçerli bir kullanıcı kimliği bulunamadı.");
+        }
+
+        // Güvenlik gereği UserId atamasını dışarıya bırakmıyor, burada biz yapıyoruz
+        command.UserId = Guid.Parse(userIdClaim);
+
+        await _mediator.Send(command, cancellationToken);
+        return Ok(new { Message = "Şifreniz başarıyla güncellendi. Güvenliğiniz için tüm diğer oturumlarınız sonlandırıldı." });
+    }
+
+    /// <summary>
+    /// Güvenli çıkış mekanizması. İsteğe göre sadece mevcut cihazdaki veya tüm cihazlardaki oturumları sonlandırır.
+    /// </summary>
+    /// <param name="command">Mevcut Refresh Token ve tüm cihazlardan çıkış tercihini içeren nesne.</param>
+    /// <param name="cancellationToken">İşlem iptal token'ı.</param>
+    [Authorize]
+    [HttpPost("logout")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> Logout([FromBody] LogoutUserCommand command, CancellationToken cancellationToken)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdClaim))
+        {
+            return Unauthorized("Geçerli bir kullanıcı kimliği bulunamadı.");
+        }
+
+        var accessToken = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+
+        var commandWithToken = command with { AccessToken = accessToken, UserId = Guid.Parse(userIdClaim) };
+
+        await _mediator.Send(commandWithToken, cancellationToken);
+
+        return Ok(new
+        {
+            Message = command.LogoutAllDevices
+            ? "Tüm cihazlardan başarıyla çıkış yapıldı ve oturumlar sıfırlandı."
+            : "Bu cihazdan güvenle çıkış yapıldı ve erişim anahtarı kara listeye alındı."
+        });
     }
 }
