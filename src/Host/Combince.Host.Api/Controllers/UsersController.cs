@@ -1,8 +1,10 @@
-﻿using Combince.Modules.Users.Core.Features.Users.Commands.LoginUser;
+﻿using Combince.Modules.Users.Core.Abstractions;
+using Combince.Modules.Users.Core.Features.Users.Commands.LoginUser;
 using Combince.Modules.Users.Core.Features.Users.Commands.LogoutUser;
-using Combince.Modules.Users.Core.Features.Users.Commands.RefreshTokenUser; // Yeni komutun isim uzayı
 using Combince.Modules.Users.Core.Features.Users.Commands.RegisterUser;
 using Combince.Modules.Users.Core.Features.Users.Commands.UpdatePassword;
+using Combince.Modules.Users.Core.Features.Users.Commands.UpdateProfile;
+using Combince.Modules.Users.Core.Features.Users.Queries.GetProfileByUserId;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -19,10 +21,12 @@ namespace Combince.Host.Api.Controllers;
 public class UsersController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly ILocalizedMessageProvider _messageProvider; 
 
-    public UsersController(IMediator mediator)
+    public UsersController(IMediator mediator, ILocalizedMessageProvider messageProvider)
     {
         _mediator = mediator;
+        _messageProvider = messageProvider;
     }
 
     /// <summary>
@@ -51,23 +55,6 @@ public class UsersController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Login([FromBody] LoginUserCommand command, CancellationToken cancellationToken)
     {
-        var response = await _mediator.Send(command, cancellationToken);
-        return Ok(response);
-    }
-
-    /// <summary>
-    /// Süresi dolmuş Access Token ve mevcut Refresh Token'ı doğrulayarak kullanıcıya yepyeni bir token paketi sunar.
-    /// </summary>
-    /// <param name="command">Eski Access Token ve veritabanında eşleşecek Refresh Token bilgilerini içeren komut nesnesi.</param>
-    /// <param name="cancellationToken">İşlem iptal token'ı.</param>
-    /// <returns>Yeni üretilen <see cref="LoginResponse"/> (Access ve Refresh Token) paketini döner.</returns>
-    [HttpPost("refresh-token")]
-    [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenUserCommand command, CancellationToken cancellationToken)
-    {
-        // İstek doğrudan MediatR üzerinden Core/Application katmanındaki Handler'a uçuyor
         var response = await _mediator.Send(command, cancellationToken);
         return Ok(response);
     }
@@ -154,4 +141,58 @@ public class UsersController : ControllerBase
             : "Bu cihazdan güvenle çıkış yapıldı ve erişim anahtarı kara listeye alındı."
         });
     }
+
+
+    /// <summary>
+    /// Aktif oturum sahibi kullanıcının profil bilgilerini (Ad Soyad, Bio, Profil Resmi) günceller.
+    /// </summary>
+    /// <summary>
+    /// Aktif oturum sahibi kullanıcının profil bilgilerini (Ad Soyad, Bio, Profil Resmi) günceller.
+    /// </summary>
+    [Authorize]
+    [HttpPut("profile")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileCommand command, CancellationToken cancellationToken)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdClaim))
+        {
+            var unauthorizedMessage = _messageProvider.GetUserMessage("InvalidUserClaim");
+            return Unauthorized(new { StatusCode = StatusCodes.Status401Unauthorized, Message = unauthorizedMessage });
+        }
+
+        command.UserId = Guid.Parse(userIdClaim);
+
+        var result = await _mediator.Send(command, cancellationToken);
+
+        if (result.IsFailure)
+        {
+            return StatusCode((int)result.StatusCode, new { StatusCode = (int)result.StatusCode, Message = result.Error });
+        }
+
+        var successMessage = _messageProvider.GetUserMessage("ProfileUpdatedSuccessfully");
+        return Ok(new { Message = successMessage });
+    }
+
+    [Authorize]
+    [HttpGet("profile/{userId:guid}")]
+    [ProducesResponseType(typeof(UserProfileDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetProfileById([FromRoute] Guid userId, CancellationToken cancellationToken)
+    {
+        var query = new GetProfileByUserIdQuery(userId);
+        var result = await _mediator.Send(query, cancellationToken);
+
+        if (result.IsFailure)
+        {
+            return StatusCode((int)result.StatusCode, new { StatusCode = (int)result.StatusCode, Message = result.Error });
+        }
+
+        return Ok(result.Value);
+    }
+
+
 }

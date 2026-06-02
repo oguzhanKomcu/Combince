@@ -4,6 +4,8 @@ using Combince.Modules.Users.Core.Abstractions;
 using Combince.Modules.Users.Infrastructure;
 using Combince.Modules.Users.Infrastructure.Services;
 using Combince.Shared.Infrastructure;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Serilog;
 using System.Text;
@@ -17,8 +19,11 @@ Log.Logger = new LoggerConfiguration()
 builder.Host.UseSerilog();
 builder.Services.AddMemoryCache();
 builder.Services.AddScoped<ITokenBlacklistService, TokenBlacklistService>();
+builder.Services.AddSingleton<ILocalizedMessageProvider, JsonMessageProvider>();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+builder.Configuration.AddJsonFile("Configs/errors.json", optional: false, reloadOnChange: true);
+
 builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo

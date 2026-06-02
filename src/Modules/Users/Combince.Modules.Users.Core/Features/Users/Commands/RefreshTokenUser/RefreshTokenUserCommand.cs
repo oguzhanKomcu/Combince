@@ -1,121 +1,79 @@
-﻿using System.IdentityModel.Tokens.Jwt;
+﻿using System.Net;
 using System.Security.Claims;
-using System.Text;
-using Combince.Modules.Users.Core.Abstractions;
-using Combince.Modules.Users.Core.Features.Users.Commands.LoginUser;
-using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.IdentityModel.Tokens;
+using Combince.Modules.Users.Core.Abstractions;
+using Combince.Modules.Users.Core.Common;
 
 namespace Combince.Modules.Users.Core.Features.Users.Commands.RefreshTokenUser;
 
-/// <summary>
-/// İstemciden gelen token yenileme parametrelerini sarmalayan MediatR komut nesnesi.
-/// Giriş işleminde olduğu gibi LoginResponse record yapısını geri döndürür.
-/// </summary>
-public record RefreshTokenUserCommand(string AccessToken, string RefreshToken) : IRequest<LoginResponse>;
+public record RefreshTokenUserCommand(string ExpiredAccessToken, string RefreshToken) : IRequest<Result<TokenResponseDto>>;
 
-/// <summary>
-/// RefreshTokenUserCommand için FluentValidation kurallarını barındıran doğrulama sınıfı.
-/// </summary>
-public class RefreshTokenUserCommandValidator : AbstractValidator<RefreshTokenUserCommand>
-{
-    public RefreshTokenUserCommandValidator()
-    {
-        RuleFor(x => x.AccessToken)
-            .NotEmpty().WithMessage("Süresi dolmuş erişim anahtarı (Access Token) boş geçilemez.");
+public record TokenResponseDto(string AccessToken, string RefreshToken, DateTime AccessTokenExpiration);
 
-        RuleFor(x => x.RefreshToken)
-            .NotEmpty().WithMessage("Yenileme anahtarı (Refresh Token) boş geçilemez.");
-    }
-}
-
-
-/// <summary>
-/// Süresi dolmuş erişim anahtarını ve yenileme anahtarını doğrulayarak yeni token paketi üreten komut işleyici sınıfı.
-/// </summary>
-public class RefreshTokenUserCommandHandler : IRequestHandler<RefreshTokenUserCommand, LoginResponse>
+public class RefreshTokenUserCommandHandler : IRequestHandler<RefreshTokenUserCommand, Result<TokenResponseDto>>
 {
     private readonly IUsersDbContext _context;
     private readonly IJwtTokenService _tokenService;
-    private readonly IConfiguration _configuration;
+    private readonly ILocalizedMessageProvider _messageProvider;
 
     public RefreshTokenUserCommandHandler(
         IUsersDbContext context,
         IJwtTokenService tokenService,
-        IConfiguration configuration)
+        ILocalizedMessageProvider messageProvider)
     {
         _context = context;
         _tokenService = tokenService;
-        _configuration = configuration;
+        _messageProvider = messageProvider;
     }
 
-    public async Task<LoginResponse> Handle(RefreshTokenUserCommand request, CancellationToken cancellationToken)
+    public async Task<Result<TokenResponseDto>> Handle(RefreshTokenUserCommand request, CancellationToken cancellationToken)
     {
-        var principal = GetPrincipalFromExpiredToken(request.AccessToken);
+        var principal = _tokenService.GetPrincipalFromExpiredToken(request.ExpiredAccessToken);
         if (principal == null)
-            throw new InvalidOperationException("Geçersiz erişim anahtarı (Access Token).");
+        {
+            var invalidTokenMsg = _messageProvider.GetUserMessage("InvalidToken");
+            return Result<TokenResponseDto>.Failure(invalidTokenMsg, HttpStatusCode.BadRequest);
+        }
 
         var userIdClaim = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
-            throw new InvalidOperationException("Erişim anahtarı içerisinde geçerli bir kullanıcı kimliği bulunamadı.");
+        if (string.IsNullOrEmpty(userIdClaim))
+        {
+            var invalidUserClaimMsg = _messageProvider.GetUserMessage("InvalidUserClaim");
+            return Result<TokenResponseDto>.Failure(invalidUserClaimMsg, HttpStatusCode.BadRequest);
+        }
+
+        var userId = Guid.Parse(userIdClaim);
 
         var user = await _context.Users
             .Include(u => u.RefreshTokens)
-            .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
+            .FirstOrDefaultAsync(u => u.Id == userId && u.IsActive, cancellationToken);
 
         if (user == null)
-            throw new InvalidOperationException("Kullanıcı sistemde bulunamadı.");
+        {
+            var userNotFoundMsg = _messageProvider.GetUserMessage("UserNotFound");
+            return Result<TokenResponseDto>.Failure(userNotFoundMsg, HttpStatusCode.NotFound);
+        }
 
-        if (!user.IsActive)
-            throw new InvalidOperationException("Bu kullanıcı hesabı askıya alınmış.");
+        var savedRefreshToken = user.RefreshTokens.FirstOrDefault(t => t.Token == request.RefreshToken);
 
-        var existingToken = user.RefreshTokens
-            .FirstOrDefault(t => t.Token == request.RefreshToken);
+        if (savedRefreshToken == null || savedRefreshToken.IsExpired || !savedRefreshToken.IsActive)
+        {
+            var tokenExpiredMsg = _messageProvider.GetUserMessage("RefreshTokenExpired");
+            return Result<TokenResponseDto>.Failure(tokenExpiredMsg, HttpStatusCode.Unauthorized);
+        }
 
-        if (existingToken == null)
-            throw new InvalidOperationException("Geçersiz yenileme anahtarı (Refresh Token).");
-
-        if (!existingToken.IsActive || existingToken.ExpiresAt <= DateTime.UtcNow)
-            throw new InvalidOperationException("Yenileme anahtarının süresi dolmuş veya iptal edilmiş. Lütfen tekrar giriş yapın.");
-
-        user.RevokeAllRefreshTokens();
+        savedRefreshToken.Revoke();
 
         var newAccessToken = _tokenService.GenerateAccessToken(user);
-        var newRefreshTokenString = _tokenService.GenerateRefreshToken();
-        var newRefreshTokenExpiresAt = DateTime.UtcNow.AddDays(7);
+        var rawRefreshTokenStr = _tokenService.GenerateRefreshToken();
+        var refreshTokenExpiry = DateTime.UtcNow.AddDays(7);
 
-        user.AddRefreshToken(newRefreshTokenString, newRefreshTokenExpiresAt);
+        user.AddRefreshToken(rawRefreshTokenStr, refreshTokenExpiry);
+
         await _context.SaveChangesAsync(cancellationToken);
 
-        return new LoginResponse(newAccessToken, newRefreshTokenString, newRefreshTokenExpiresAt);
-    }
-
-    /// <summary>
-    /// Süresi dolmuş token'ın imzasını doğrulayarak içindeki kullanıcı bilgilerini söker.
-    /// </summary>
-    private ClaimsPrincipal? GetPrincipalFromExpiredToken(string token)
-    {
-        var tokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidIssuer = _configuration["Jwt:Issuer"],
-            ValidAudience = _configuration["Jwt:Audience"],
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!)),
-            ValidateLifetime = false // Süresi bittiği için validasyonun patlamasını engelliyoruz
-        };
-
-        var tokenHandler = new JwtSecurityTokenHandler();
-        var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out SecurityToken securityToken);
-
-        if (securityToken is not JwtSecurityToken jwtSecurityToken ||
-            !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
-            throw new SecurityTokenException("Geçersiz imza algoritması.");
-
-        return principal;
+        var response = new TokenResponseDto(newAccessToken, rawRefreshTokenStr, DateTime.UtcNow.AddMinutes(15));
+        return Result<TokenResponseDto>.Success(response);
     }
 }

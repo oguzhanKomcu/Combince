@@ -3,6 +3,7 @@ using Combince.Modules.Users.Core.Features.Users.Commands.RegisterUser;
 using Combince.Modules.Users.Infrastructure.Persistence;
 using Combince.Modules.Users.Infrastructure.PipelineBehaviors;
 using Combince.Modules.Users.Infrastructure.Security;
+using Combince.Modules.Users.Infrastructure.Services;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -19,6 +20,7 @@ public static class UsersModuleExtensions
 
         services.AddScoped<IUsersDbContext>(provider => provider.GetRequiredService<UsersDbContext>());
         services.AddScoped<IPasswordHasher, PasswordHasher>();
+        services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IJwtTokenService, JwtTokenService>();
 
         services.AddMediatR(cfg =>

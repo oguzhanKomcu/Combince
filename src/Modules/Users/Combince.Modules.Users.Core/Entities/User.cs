@@ -53,10 +53,7 @@ public class User
             token.Revoke();
         }
     }
-    /// <summary>
-    /// Kullanıcıya ait sadece belirli bir aktif yenileme anahtarını (Refresh Token) iptal eder.
-    /// </summary>
-    /// <param name="token">İptal edilmek istenen UserRefreshToken nesnesi.</param>
+
     public void RevokeSingleRefreshToken(UserRefreshToken token)
     {
         var targetToken = _refreshTokens.FirstOrDefault(t => t.Token == token.Token);
@@ -72,4 +69,6 @@ public class User
 
         PasswordHash = newPasswordHash;
     }
+
+
 }

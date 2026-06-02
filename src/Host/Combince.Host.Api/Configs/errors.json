@@ -1,0 +1,19 @@
+{
+  "UserMessages": {
+    "JwtKeyNotFound": "JWT Key tanımı appsettings içinde bulunamadı.",
+    "UserNotFoundOrPassive": "Böyle bir kullanıcı bulunamadı veya hesap pasif.",
+    "UserNotFound": "Kullanıcı sistemde bulunamadı.",
+    "InvalidUserClaim": "Geçerli bir kullanıcı kimliği bulunamadı.",
+    "ProfileUpdatedSuccessfully": "Profil bilgileriniz başarıyla güncellendi.",
+    "InvalidToken": "Geçersiz veya bozulmuş erişim token'ı.",
+    "RefreshTokenExpired": "Oturum süreniz doldu, lütfen tekrar giriş yapın.",
+    "InvalidLoginCredentials": "Geçersiz e-posta, kullanıcı adı veya şifre.",
+    "UserAccountSuspended": "Bu kullanıcı hesabı askıya alınmış."
+  },
+  "ValidationMessages": {
+    "FullNameMaxLength": "Ad soyad alanı en fazla 100 karakter olabilir.",
+    "BioMaxLength": "Biyografi alanı en fazla 500 karakter olabilir.",
+    "EmailOrUsernameNotEmpty": "E-posta veya kullanıcı adı boş geçilemez.",
+    "PasswordNotEmpty": "Şifre boş geçilemez."
+  }
+}

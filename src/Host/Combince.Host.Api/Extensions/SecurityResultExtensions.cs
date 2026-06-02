@@ -1,26 +1,18 @@
 ﻿using System.Text;
+using Combince.Modules.Users.Core.Abstractions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Combince.Host.Api.Extensions;
 
-/// <summary>
-/// Uygulamanın güvenliğini sağlayan kimlik doğrulama (Authentication) ve 
-/// yetkilendirme (Authorization) servislerinin kayıtlarını içeren genişletme sınıfı.
-/// </summary>
 public static class SecurityResultExtensions
 {
-    /// <summary>
-    /// appsettings.json içerisindeki "Jwt" yapısını kullanarak JWT Bearer kimlik doğrulama şemasını sisteme kaydeder.
-    /// </summary>
-    /// <param name="services">Bağımlılık enjeksiyon konteyneri (<see cref="IServiceCollection"/>).</param>
-    /// <param name="configuration">Uygulama yapılandırma ayarları (<see cref="IConfiguration"/>).</param>
-    /// <returns>Zincirleme kullanım için güncellenmiş servis koleksiyonunu döner.</returns>
-    /// <exception cref="InvalidOperationException">JWT Key tanımı appsettings.json içinde bulunamadığında fırlatılır.</exception>
     public static IServiceCollection AddSecurityInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        // Appsettings içindeki mevcut "Jwt" düğümünden verileri tam adlarıyla okuyoruz
-        var secretKey = configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key tanımı appsettings içinde bulunamadı.");
+        using var serviceProvider = services.BuildServiceProvider();
+        var messageProvider = serviceProvider.GetRequiredService<ILocalizedMessageProvider>();
+
+        var secretKey = configuration["Jwt:Key"] ?? throw new InvalidOperationException(messageProvider.GetUserMessage("JwtKeyNotFound"));
         var issuer = configuration["Jwt:Issuer"];
         var audience = configuration["Jwt:Audience"];
 
@@ -40,7 +32,7 @@ public static class SecurityResultExtensions
                 ValidIssuer = issuer,
                 ValidAudience = audience,
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
-                ClockSkew = TimeSpan.Zero // Token süresi bittiği saniye erişim kesilsin
+                ClockSkew = TimeSpan.Zero
             };
         });
 

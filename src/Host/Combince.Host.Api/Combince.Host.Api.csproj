@@ -30,4 +30,10 @@
     <ProjectReference Include="..\..\Shared\Combince.Shared.Infrastructure\Combince.Shared.Infrastructure.csproj" />
   </ItemGroup>
 
+	<ItemGroup>
+		<None Update="Configs\errors.json">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+
 </Project>
