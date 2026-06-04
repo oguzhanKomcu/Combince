@@ -6,9 +6,11 @@ using Combince.Modules.Users.Infrastructure.Services;
 using Combince.Shared.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Combince.Modules.Posts.Infrastructure;
 using Microsoft.OpenApi;
 using Serilog;
 using System.Text;
+using MassTransit;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -50,7 +52,19 @@ builder.Services.AddSwaggerGen(options =>
 
 
 builder.Services.AddSharedInfrastructure(builder.Configuration);
+
 builder.Services.AddUsersModule(builder.Configuration);
+builder.Services.AddPostsModule(builder.Configuration);
+
+builder.Services.AddMassTransit(x =>
+{
+    x.SetKebabCaseEndpointNameFormatter();
+
+    x.UsingInMemory((context, cfg) =>
+    {
+        cfg.ConfigureEndpoints(context);
+    });
+});
 builder.Services.AddSecurityInfrastructure(builder.Configuration);
 
 var app = builder.Build();

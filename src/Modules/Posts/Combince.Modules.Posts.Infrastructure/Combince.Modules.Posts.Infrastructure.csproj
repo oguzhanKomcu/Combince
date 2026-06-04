@@ -11,4 +11,9 @@
     <ProjectReference Include="..\Combince.Modules.Posts.Core\Combince.Modules.Posts.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="MassTransit.Extensions.DependencyInjection" Version="7.3.1" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="2.1.6" />
+  </ItemGroup>
+
 </Project>

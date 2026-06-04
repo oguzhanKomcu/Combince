@@ -1,10 +1,12 @@
 ﻿using Combince.Modules.Users.Core.Abstractions;
 using Combince.Modules.Users.Core.Features.Users.Commands.RegisterUser;
+using Combince.Modules.Users.Infrastructure.Messaging;
 using Combince.Modules.Users.Infrastructure.Persistence;
 using Combince.Modules.Users.Infrastructure.PipelineBehaviors;
 using Combince.Modules.Users.Infrastructure.Security;
 using Combince.Modules.Users.Infrastructure.Services;
 using FluentValidation;
+using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,6 +24,7 @@ public static class UsersModuleExtensions
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IJwtTokenService, JwtTokenService>();
+        services.AddScoped<IEventBus, EventBus>();
 
         services.AddMediatR(cfg =>
         {
@@ -31,6 +34,16 @@ public static class UsersModuleExtensions
         });
 
         services.AddValidatorsFromAssembly(typeof(RegisterUserCommand).Assembly);
+
+        return services;
+    }
+    private static IServiceCollection AddMassTransitForModule(this IServiceCollection services)
+    {
+        services.AddMassTransit(x =>
+        {
+
+            x.AddConsumers(typeof(UsersModuleExtensions).Assembly);
+        });
 
         return services;
     }

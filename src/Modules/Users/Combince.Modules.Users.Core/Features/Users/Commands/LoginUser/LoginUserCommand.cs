@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using Combince.Modules.Users.Core.Abstractions;
 using Combince.Modules.Users.Core.Common;
+using Combince.Modules.Users.Core.Events;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -8,7 +9,6 @@ using Microsoft.EntityFrameworkCore;
 namespace Combince.Modules.Users.Core.Features.Users.Commands.LoginUser;
 
 public record LoginResponse(string AccessToken, string RefreshToken, DateTime RefreshTokenExpiresAt);
-
 public record LoginUserCommand(string EmailOrUsername, string Password) : IRequest<Result<LoginResponse>>;
 
 public class LoginUserCommandValidator : AbstractValidator<LoginUserCommand>
@@ -31,17 +31,20 @@ public class LoginUserCommandHandler : IRequestHandler<LoginUserCommand, Result<
     private readonly IPasswordHasher _passwordHasher;
     private readonly IJwtTokenService _tokenService;
     private readonly ILocalizedMessageProvider _messageProvider;
+    private readonly IEventBus _eventBus;
 
     public LoginUserCommandHandler(
         IUsersDbContext context,
         IPasswordHasher passwordHasher,
         IJwtTokenService tokenService,
-        ILocalizedMessageProvider messageProvider)
+        ILocalizedMessageProvider messageProvider,
+        IEventBus eventBus)
     {
         _context = context;
         _passwordHasher = passwordHasher;
         _tokenService = tokenService;
         _messageProvider = messageProvider;
+        _eventBus = eventBus;
     }
 
     public async Task<Result<LoginResponse>> Handle(LoginUserCommand request, CancellationToken cancellationToken)
@@ -69,7 +72,14 @@ public class LoginUserCommandHandler : IRequestHandler<LoginUserCommand, Result<
         var refreshTokenExpiresAt = DateTime.UtcNow.AddDays(7);
 
         user.AddRefreshToken(refreshTokenString, refreshTokenExpiresAt);
+
         await _context.SaveChangesAsync(cancellationToken);
+
+        await _eventBus.PublishAsync(new UserLoggedInIntegrationEvent(
+            user.Id,
+            user.Username,
+            user.Email
+        ), cancellationToken);
 
         var response = new LoginResponse(accessToken, refreshTokenString, refreshTokenExpiresAt);
         return Result<LoginResponse>.Success(response);
