@@ -1,4 +1,7 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
+using System.Threading;
+using System.Threading.Tasks;
 using Combince.Modules.Users.Core.Abstractions;
 using Combince.Modules.Users.Core.Common;
 using FluentValidation;
@@ -7,11 +10,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Combince.Modules.Users.Core.Features.Users.Commands.UpdateProfile;
 
-
-/// <summary>
-/// Kullanıcının profil bilgilerini güncelleyen ve kurumsal Result nesnesi dönen MediatR komut yapısı.
-/// </summary>
-public record UpdateProfileCommand(string? FullName, string? Bio, string? ProfilePictureUrl) : IRequest<Result>
+public record UpdateProfileCommand(string? FullName, string? Bio, string? ProfilePictureUrl) : IRequest<Result<Unit>>
 {
     public Guid UserId { get; set; }
 }
@@ -22,15 +21,15 @@ public class UpdateProfileCommandValidator : AbstractValidator<UpdateProfileComm
     {
         RuleFor(x => x.FullName)
             .MaximumLength(100)
-            .WithMessage(_ => messageProvider.GetMessage("ValidationMessages", "FullNameMaxLength"));
+            .WithMessage(messageProvider.GetMessage("ValidationMessages", "Users:FullNameMaxLength"));
 
         RuleFor(x => x.Bio)
             .MaximumLength(500)
-            .WithMessage(_ => messageProvider.GetMessage("ValidationMessages", "BioMaxLength"));
+            .WithMessage(messageProvider.GetMessage("ValidationMessages", "Users:BioMaxLength"));
     }
 }
 
-public class UpdateProfileCommandHandler : IRequestHandler<UpdateProfileCommand, Result>
+public class UpdateProfileCommandHandler : IRequestHandler<UpdateProfileCommand, Result<Unit>>
 {
     private readonly IUsersDbContext _context;
     private readonly ILocalizedMessageProvider _messageProvider;
@@ -41,21 +40,21 @@ public class UpdateProfileCommandHandler : IRequestHandler<UpdateProfileCommand,
         _messageProvider = messageProvider;
     }
 
-    public async Task<Result> Handle(UpdateProfileCommand request, CancellationToken cancellationToken)
+    public async Task<Result<Unit>> Handle(UpdateProfileCommand request, CancellationToken cancellationToken)
     {
         var user = await _context.Users
             .FirstOrDefaultAsync(u => u.Id == request.UserId, cancellationToken);
 
         if (user == null)
         {
-            var errorMessage = _messageProvider.GetUserMessage("UserNotFound");
-            return Result.Failure(errorMessage, HttpStatusCode.NotFound);
+            var errorMessage = _messageProvider.GetUserMessage("Users:UserNotFound");
+            return Result<Unit>.Failure(errorMessage, HttpStatusCode.NotFound);
         }
 
         user.UpdateProfile(request.FullName, request.Bio, request.ProfilePictureUrl);
 
         await _context.SaveChangesAsync(cancellationToken);
 
-        return Result.Success();
+        return Result<Unit>.Success(Unit.Value);
     }
 }

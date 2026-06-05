@@ -1,4 +1,9 @@
-﻿using Combince.Modules.Users.Core.Abstractions;
+﻿using System;
+using System.Net;
+using System.Threading;
+using System.Threading.Tasks;
+using Combince.Modules.Users.Core.Abstractions;
+using Combince.Modules.Users.Core.Common;
 using Combince.Modules.Users.Core.Entities;
 using FluentValidation;
 using MediatR;
@@ -10,55 +15,66 @@ public record RegisterUserCommand(
     string Email,
     string Username,
     string Password,
-    string? FullName) : IRequest<Guid>;
+    string? FullName) : IRequest<Result<Guid>>;
 
 public class RegisterUserCommandValidator : AbstractValidator<RegisterUserCommand>
 {
-    public RegisterUserCommandValidator()
+    public RegisterUserCommandValidator(ILocalizedMessageProvider messageProvider)
     {
         RuleFor(x => x.Email)
-            .NotEmpty().WithMessage("E-posta adresi boş geçilemez.")
-            .EmailAddress().WithMessage("Geçerli bir e-posta adresi giriniz.");
+            .NotEmpty().WithMessage(messageProvider.GetMessage("ValidationMessages", "Users:EmailNotEmpty"))
+            .EmailAddress().WithMessage(messageProvider.GetMessage("ValidationMessages", "Users:InvalidEmailFormat"));
 
         RuleFor(x => x.Username)
-            .NotEmpty().WithMessage("Kullanıcı adı boş geçilemez.")
-            .MinimumLength(3).WithMessage("Kullanıcı adı en az 3 karakter olmalıdır.")
-            .Matches(@"^[a-zA-Z0-9_]+$").WithMessage("Kullanıcı adı sadece harf, rakam ve alt çizgi içerebilir.");
+            .NotEmpty().WithMessage(messageProvider.GetMessage("ValidationMessages", "Users:UsernameNotEmpty"))
+            .MinimumLength(3).WithMessage(messageProvider.GetMessage("ValidationMessages", "Users:UsernameMinLength"))
+            .Matches(@"^[a-zA-Z0-9_]+$").WithMessage(messageProvider.GetMessage("ValidationMessages", "Users:UsernameInvalidChars"));
 
         RuleFor(x => x.Password)
-            .NotEmpty().WithMessage("Şifre boş geçilemez.")
-            .MinimumLength(6).WithMessage("Şifre en az 6 karakter olmalıdır.");
+            .NotEmpty().WithMessage(messageProvider.GetMessage("ValidationMessages", "Users:PasswordNotEmpty"))
+            .MinimumLength(6).WithMessage(messageProvider.GetMessage("ValidationMessages", "Users:PasswordMinLength"));
     }
 }
 
-public class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommand, Guid>
+public class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommand, Result<Guid>>
 {
     private readonly IUsersDbContext _context;
     private readonly IPasswordHasher _passwordHasher;
+    private readonly ILocalizedMessageProvider _messageProvider;
 
-    public RegisterUserCommandHandler(IUsersDbContext context, IPasswordHasher passwordHasher)
+    public RegisterUserCommandHandler(
+        IUsersDbContext context,
+        IPasswordHasher passwordHasher,
+        ILocalizedMessageProvider messageProvider)
     {
         _context = context;
         _passwordHasher = passwordHasher;
+        _messageProvider = messageProvider;
     }
 
-    public async Task<Guid> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
+    public async Task<Result<Guid>> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
     {
         var isEmailUnique = await _context.Users
             .AllAsync(u => u.Email != request.Email, cancellationToken);
 
         if (!isEmailUnique)
-            throw new InvalidOperationException("Bu e-posta adresi zaten kullanımda.");
+        {
+            var emailExistsMsg = _messageProvider.GetUserMessage("Users:EmailAlreadyExists");
+            return Result<Guid>.Failure(emailExistsMsg, HttpStatusCode.BadRequest);
+        }
 
         var isUsernameUnique = await _context.Users
             .AllAsync(u => u.Username != request.Username, cancellationToken);
 
         if (!isUsernameUnique)
-            throw new InvalidOperationException("Bu kullanıcı adı zaten alınmış.");
+        {
+            var usernameExistsMsg = _messageProvider.GetUserMessage("Users:UsernameAlreadyTaken");
+            return Result<Guid>.Failure(usernameExistsMsg, HttpStatusCode.BadRequest);
+        }
 
         var hashedPassword = _passwordHasher.HashPassword(request.Password);
-
         var userId = Guid.NewGuid();
+
         var user = new User(
             id: userId,
             email: request.Email.Trim().ToLowerScope(),
@@ -70,11 +86,10 @@ public class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommand, G
         _context.Users.Add(user);
         await _context.SaveChangesAsync(cancellationToken);
 
-        return user.Id;
+        return Result<Guid>.Success(user.Id);
     }
 }
 
-// Küçük bir yardımcı metot (Lokal olarak burada kalabilir veya Shared altına taşınabilir)
 internal static class StringExtensions
 {
     public static string ToLowerScope(this string value) => value.ToLowerInvariant();

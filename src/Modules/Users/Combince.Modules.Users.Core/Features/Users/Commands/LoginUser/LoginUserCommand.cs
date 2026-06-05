@@ -17,11 +17,11 @@ public class LoginUserCommandValidator : AbstractValidator<LoginUserCommand>
     {
         RuleFor(x => x.EmailOrUsername)
             .NotEmpty()
-            .WithMessage(messageProvider.GetMessage("ValidationMessages", "EmailOrUsernameNotEmpty"));
+            .WithMessage(messageProvider.GetMessage("ValidationMessages", "Users:EmailOrUsernameNotEmpty"));
 
         RuleFor(x => x.Password)
             .NotEmpty()
-            .WithMessage(messageProvider.GetMessage("ValidationMessages", "PasswordNotEmpty"));
+            .WithMessage(messageProvider.GetMessage("ValidationMessages", "Users:PasswordNotEmpty"));
     }
 }
 
@@ -57,13 +57,13 @@ public class LoginUserCommandHandler : IRequestHandler<LoginUserCommand, Result<
 
         if (user == null || !_passwordHasher.VerifyPassword(request.Password, user.PasswordHash))
         {
-            var invalidCredsMsg = _messageProvider.GetUserMessage("InvalidLoginCredentials");
+            var invalidCredsMsg = _messageProvider.GetUserMessage("Users:InvalidLoginCredentials");
             return Result<LoginResponse>.Failure(invalidCredsMsg, HttpStatusCode.BadRequest);
         }
 
         if (!user.IsActive)
         {
-            var suspendedMsg = _messageProvider.GetUserMessage("UserAccountSuspended");
+            var suspendedMsg = _messageProvider.GetUserMessage("Users:UserAccountSuspended");
             return Result<LoginResponse>.Failure(suspendedMsg, HttpStatusCode.BadRequest);
         }
 

@@ -29,19 +29,19 @@ public class UsersController : ControllerBase
         _messageProvider = messageProvider;
     }
 
-    /// <summary>
-    /// Sisteme yeni bir kullanıcı kaydeder.
-    /// </summary>
-    /// <param name="command">Kullanıcı kayıt bilgilerini içeren komut nesnesi.</param>
-    /// <param name="cancellationToken">İşlem iptal token'ı.</param>
-    /// <returns>Yeni oluşturulan kullanıcının benzersiz sistem kimliğini (<see cref="Guid"/>) döner.</returns>
     [HttpPost("register")]
     [ProducesResponseType(typeof(Guid), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Register([FromBody] RegisterUserCommand command, CancellationToken cancellationToken)
     {
-        var userId = await _mediator.Send(command, cancellationToken);
-        return Ok(userId);
+        var result = await _mediator.Send(command, cancellationToken);
+
+        if (!result.IsSuccess)
+        {
+            return StatusCode((int)result.StatusCode, result.Error);
+        }
+
+        return Ok(result.Value);
     }
 
     /// <summary>
@@ -82,33 +82,29 @@ public class UsersController : ControllerBase
         return Ok(new { Message = "Token geçerli! Profil kapısı açıldı.", AuthenticatedUserId = Guid.Parse(userIdClaim) });
     }
 
-    /// <summary>
-    /// Aktif oturum sahibi kullanıcının mevcut şifresini doğrulatıp yeni bir şifre belirlemesini sağlar.
-    /// </summary>
-    /// <param name="command">Mevcut ve yeni şifre bilgilerini içeren nesne.</param>
-    /// <param name="cancellationToken">İşlem iptal token'ı.</param>
-    /// <response code="200">Şifre başarıyla güncellendi.</response>
-    /// <response code="400">Doğrulama hatası veya geçersiz şifre durumu.</response>
-    /// <response code="401">Yetkisiz erişim (Token eksik veya geçersiz).</response>
     [Authorize]
     [HttpPut("update-password")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UpdatePassword([FromBody] UpdatePasswordCommand command, CancellationToken cancellationToken)
     {
-        // Token içinden NameIdentifier (User ID) değerini güvenle söküyoruz
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userIdClaim))
+        if (!Guid.TryParse(userIdClaim, out var userId))
         {
-            return Unauthorized("Geçerli bir kullanıcı kimliği bulunamadı.");
+            return Unauthorized("Users:InvalidUserClaim");
         }
 
-        // Güvenlik gereği UserId atamasını dışarıya bırakmıyor, burada biz yapıyoruz
-        command.UserId = Guid.Parse(userIdClaim);
+        var commandWithUser = command with { UserId = userId };
+        var result = await _mediator.Send(commandWithUser, cancellationToken);
 
-        await _mediator.Send(command, cancellationToken);
-        return Ok(new { Message = "Şifreniz başarıyla güncellendi. Güvenliğiniz için tüm diğer oturumlarınız sonlandırıldı." });
+        if (!result.IsSuccess)
+        {
+            return StatusCode((int)result.StatusCode, result.Error);
+        }
+
+        return Ok(result.Value);
     }
 
     /// <summary>
@@ -120,26 +116,36 @@ public class UsersController : ControllerBase
     [HttpPost("logout")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Logout([FromBody] LogoutUserCommand command, CancellationToken cancellationToken)
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userIdClaim))
+        if (!Guid.TryParse(userIdClaim, out var userId))
         {
-            return Unauthorized("Geçerli bir kullanıcı kimliği bulunamadı.");
+            return Unauthorized("Users:InvalidUserClaim");
         }
 
-        var accessToken = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-
-        var commandWithToken = command with { AccessToken = accessToken, UserId = Guid.Parse(userIdClaim) };
-
-        await _mediator.Send(commandWithToken, cancellationToken);
-
-        return Ok(new
+        string accessToken = string.Empty;
+        var authHeader = Request.Headers["Authorization"].ToString();
+        if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
         {
-            Message = command.LogoutAllDevices
-            ? "Tüm cihazlardan başarıyla çıkış yapıldı ve oturumlar sıfırlandı."
-            : "Bu cihazdan güvenle çıkış yapıldı ve erişim anahtarı kara listeye alındı."
-        });
+            accessToken = authHeader.Substring("Bearer ".Length).Trim();
+        }
+
+        var commandWithToken = command with
+        {
+            AccessToken = accessToken,
+            UserId = userId
+        };
+
+        var result = await _mediator.Send(commandWithToken, cancellationToken);
+
+        if (!result.IsSuccess)
+        {
+            return StatusCode((int)result.StatusCode, result.Error);
+        }
+
+        return Ok();
     }
 
 
@@ -153,28 +159,25 @@ public class UsersController : ControllerBase
     [HttpPut("profile")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileCommand command, CancellationToken cancellationToken)
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userIdClaim))
+        if (!Guid.TryParse(userIdClaim, out var userId))
         {
-            var unauthorizedMessage = _messageProvider.GetUserMessage("InvalidUserClaim");
-            return Unauthorized(new { StatusCode = StatusCodes.Status401Unauthorized, Message = unauthorizedMessage });
+            return Unauthorized("Users:InvalidUserClaim");
         }
 
-        command.UserId = Guid.Parse(userIdClaim);
+        var commandWithUser = command with { UserId = userId };
+        var result = await _mediator.Send(commandWithUser, cancellationToken);
 
-        var result = await _mediator.Send(command, cancellationToken);
-
-        if (result.IsFailure)
+        if (!result.IsSuccess)
         {
-            return StatusCode((int)result.StatusCode, new { StatusCode = (int)result.StatusCode, Message = result.Error });
+            return StatusCode((int)result.StatusCode, result.Error);
         }
 
-        var successMessage = _messageProvider.GetUserMessage("ProfileUpdatedSuccessfully");
-        return Ok(new { Message = successMessage });
+        return Ok(result.Value);
     }
 
     [Authorize]

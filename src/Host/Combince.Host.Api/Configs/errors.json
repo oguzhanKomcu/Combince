@@ -1,19 +1,42 @@
 {
   "UserMessages": {
-    "JwtKeyNotFound": "JWT Key tanımı appsettings içinde bulunamadı.",
-    "UserNotFoundOrPassive": "Böyle bir kullanıcı bulunamadı veya hesap pasif.",
-    "UserNotFound": "Kullanıcı sistemde bulunamadı.",
-    "InvalidUserClaim": "Geçerli bir kullanıcı kimliği bulunamadı.",
-    "ProfileUpdatedSuccessfully": "Profil bilgileriniz başarıyla güncellendi.",
-    "InvalidToken": "Geçersiz veya bozulmuş erişim token'ı.",
-    "RefreshTokenExpired": "Oturum süreniz doldu, lütfen tekrar giriş yapın.",
-    "InvalidLoginCredentials": "Geçersiz e-posta, kullanıcı adı veya şifre.",
-    "UserAccountSuspended": "Bu kullanıcı hesabı askıya alınmış."
+    "Users": {
+      "JwtKeyNotFound": "JWT Key tanımı appsettings içinde bulunamadı.",
+      "UserNotFoundOrPassive": "Böyle bir kullanıcı bulunamadı veya hesap pasif.",
+      "UserNotFound": "Kullanıcı sistemde bulunamadı.",
+      "InvalidUserClaim": "Geçerli bir kullanıcı kimliği bulunamadı.",
+      "ProfileUpdatedSuccessfully": "Profil bilgileriniz başarıyla güncellendi.",
+      "InvalidToken": "Geçersiz veya bozulmuş erişim token'ı.",
+      "RefreshTokenExpired": "Oturum süreniz doldu, lütfen tekrar giriş yapın.",
+      "InvalidLoginCredentials": "Geçersiz e-posta, kullanıcı adı veya şifre.",
+      "UserAccountSuspended": "Bu kullanıcı hesabı askıya alınmış.",
+      "EmailAlreadyExists": "Bu e-posta adresi zaten kullanımda.",
+      "UsernameAlreadyTaken": "Bu kullanıcı adı zaten alınmış.",
+      "CurrentPasswordWrong": "Mevcut şifreniz hatalı."
+    },
+    "Posts": {
+      "PostNotFound": "Güncellenmek istenen kombin bulunamadı.",
+      "UnauthorizedPostAction": "Bu kombini güncelleme yetkiniz bulunmamaktadır."
+    }
   },
   "ValidationMessages": {
-    "FullNameMaxLength": "Ad soyad alanı en fazla 100 karakter olabilir.",
-    "BioMaxLength": "Biyografi alanı en fazla 500 karakter olabilir.",
-    "EmailOrUsernameNotEmpty": "E-posta veya kullanıcı adı boş geçilemez.",
-    "PasswordNotEmpty": "Şifre boş geçilemez."
+    "Users": {
+      "FullNameMaxLength": "Ad soyad alanı en fazla 100 karakter olabilir.",
+      "BioMaxLength": "Biyografi alanı en fazla 500 karakter olabilir.",
+      "EmailOrUsernameNotEmpty": "E-posta veya kullanıcı adı boş geçilemez.",
+      "PasswordNotEmpty": "Şifre boş geçilemez.",
+      "EmailNotEmpty": "E-posta adresi boş geçilemez.",
+      "InvalidEmailFormat": "Geçerli bir e-posta adresi giriniz.",
+      "UsernameNotEmpty": "Kullanıcı adı boş geçilemez.",
+      "UsernameMinLength": "Kullanıcı adı en az 3 karakter olmalıdır.",
+      "UsernameInvalidChars": "Kullanıcı adı sadece harf, rakam ve alt çizgi içerebilir.",
+      "PasswordMinLength": "Şifre en az 6 karakter olmalıdır.",
+      "CurrentPasswordNotEmpty": "Mevcut şifreniz boş geçilemez.",
+      "NewPasswordNotEmpty": "Yeni şifre boş geçilemez.",
+      "NewPasswordCannotBeSame": "Yeni şifreniz mevcut şifreniz ile aynı olamaz."
+    },
+    "Posts": {
+      "PostDescriptionNotEmpty": "Kombin açıklaması boş geçilemez."
+    }
   }
 }

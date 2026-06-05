@@ -34,4 +34,9 @@ public class Post
         AverageRating = averageRating;
         TotalVotes = totalVotes;
     }
+
+    public void UpdateDescription(string newDescription)
+    {
+        Description = newDescription;
+    }
 }

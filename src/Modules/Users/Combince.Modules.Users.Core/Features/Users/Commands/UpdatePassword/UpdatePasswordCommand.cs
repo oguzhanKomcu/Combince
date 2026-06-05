@@ -1,69 +1,74 @@
-﻿using System.Security.Claims;
+﻿using System;
+using System.Net;
+using System.Threading;
+using System.Threading.Tasks;
 using Combince.Modules.Users.Core.Abstractions;
+using Combince.Modules.Users.Core.Common;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
 namespace Combince.Modules.Users.Core.Features.Users.Commands.UpdatePassword;
 
-/// <summary>
-/// Kullanıcının mevcut şifresini doğrulayarak yeni şifre belirlemesini sağlayan MediatR komut nesnesi.
-/// Güvenlik gerekçesiyle aktif kullanıcının ID'si endpoint seviyesinde token'dan okunup bu nesneye basılacaktır.
-/// </summary>
-public record UpdatePasswordCommand(string CurrentPassword, string NewPassword) : IRequest<Unit>
+public record UpdatePasswordCommand(string CurrentPassword, string NewPassword) : IRequest<Result<Unit>>
 {
     public Guid UserId { get; set; }
 }
 
 public class UpdatePasswordCommandValidator : AbstractValidator<UpdatePasswordCommand>
 {
-    public UpdatePasswordCommandValidator()
+    public UpdatePasswordCommandValidator(ILocalizedMessageProvider messageProvider)
     {
         RuleFor(x => x.CurrentPassword)
-            .NotEmpty().WithMessage("Mevcut şifreniz boş geçilemez.");
+            .NotEmpty().WithMessage(messageProvider.GetMessage("ValidationMessages", "Users:CurrentPasswordNotEmpty"));
 
         RuleFor(x => x.NewPassword)
-            .NotEmpty().WithMessage("Yeni şifre boş geçilemez.")
-            .MinimumLength(6).WithMessage("Yeni şifre en az 6 karakter olmalıdır.")
-            .NotEqual(x => x.CurrentPassword).WithMessage("Yeni şifreniz mevcut şifreniz ile aynı olamaz.");
+            .NotEmpty().WithMessage(messageProvider.GetMessage("ValidationMessages", "Users:NewPasswordNotEmpty"))
+            .MinimumLength(6).WithMessage(messageProvider.GetMessage("ValidationMessages", "Users:PasswordMinLength"))
+            .NotEqual(x => x.CurrentPassword).WithMessage(messageProvider.GetMessage("ValidationMessages", "Users:NewPasswordCannotBeSame"));
     }
 }
 
-public class UpdatePasswordCommandHandler : IRequestHandler<UpdatePasswordCommand, Unit>
+public class UpdatePasswordCommandHandler : IRequestHandler<UpdatePasswordCommand, Result<Unit>>
 {
     private readonly IUsersDbContext _context;
     private readonly IPasswordHasher _passwordHasher;
+    private readonly ILocalizedMessageProvider _messageProvider;
 
-    public UpdatePasswordCommandHandler(IUsersDbContext context, IPasswordHasher passwordHasher)
+    public UpdatePasswordCommandHandler(
+        IUsersDbContext context,
+        IPasswordHasher passwordHasher,
+        ILocalizedMessageProvider messageProvider)
     {
         _context = context;
         _passwordHasher = passwordHasher;
+        _messageProvider = messageProvider;
     }
 
-    public async Task<Unit> Handle(UpdatePasswordCommand request, CancellationToken cancellationToken)
+    public async Task<Result<Unit>> Handle(UpdatePasswordCommand request, CancellationToken cancellationToken)
     {
-        // 1. Veritabanından şifresini değiştirmek isteyen kullanıcıyı çekiyoruz
         var user = await _context.Users
             .FirstOrDefaultAsync(u => u.Id == request.UserId, cancellationToken);
 
         if (user == null)
-            throw new InvalidOperationException("Kullanıcı sistemde bulunamadı.");
+        {
+            var userNotFoundMsg = _messageProvider.GetUserMessage("Users:UserNotFound");
+            return Result<Unit>.Failure(userNotFoundMsg, HttpStatusCode.NotFound);
+        }
 
-        // 2. İstemciden gelen mevcut şifrenin doğruluğunu kontrol ediyoruz
         if (!_passwordHasher.VerifyPassword(request.CurrentPassword, user.PasswordHash))
-            throw new InvalidOperationException("Mevcut şifreniz hatalı.");
+        {
+            var wrongPasswordMsg = _messageProvider.GetUserMessage("Users:CurrentPasswordWrong");
+            return Result<Unit>.Failure(wrongPasswordMsg, HttpStatusCode.BadRequest);
+        }
 
-        // 3. Yeni şifreyi hasleyip entity üzerinde güncelliyoruz
         var newPasswordHash = _passwordHasher.HashPassword(request.NewPassword);
 
-        // Entity içinde bu atamayı yapabilmek için birazdan User entity'sine metot ekleyeceğiz
         user.UpdatePassword(newPasswordHash);
-
-        // 4. Güvenlik zinciri gereği şifre değiştiği an kullanıcının tüm açık oturumlarını (Refresh Token'larını) patlatıyoruz
         user.RevokeAllRefreshTokens();
 
         await _context.SaveChangesAsync(cancellationToken);
 
-        return Unit.Value;
+        return Result<Unit>.Success(Unit.Value);
     }
 }
