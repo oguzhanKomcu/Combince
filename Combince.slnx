@@ -11,6 +11,10 @@
     <Project Path="src/Modules/Interactions/Combince.Modules.Interactions.Core/Combince.Modules.Interactions.Core.csproj" Id="5df76611-0137-4501-962d-87520a22d469" />
     <Project Path="src/Modules/Interactions/Combince.Modules.Interactions.Infrastructure/Combince.Modules.Interactions.Infrastructure.csproj" Id="bf755b18-17bd-4335-b159-aa15b35816cd" />
   </Folder>
+  <Folder Name="/src/Modules/PostComments/">
+    <Project Path="src/Modules/PostComments/Combince.Modules.PostComments.Core/Combince.Modules.PostComments.Core.csproj" Id="0a755933-49c4-4b3b-9409-7653222b302d" />
+    <Project Path="src/Modules/PostComments/Combince.Modules.Posts.Infrastructure/Combince.Modules.PostComments.Infrastructure.csproj" Id="b908d8ed-8311-459e-82cc-b06fce511685" />
+  </Folder>
   <Folder Name="/src/Modules/Posts/">
     <Project Path="src/Modules/Posts/Combince.Modules.Posts.Core/Combince.Modules.Posts.Core.csproj" Id="ed704c65-d1e6-4a3b-9254-1c2dfcf7ad21" />
     <Project Path="src/Modules/Posts/Combince.Modules.Posts.Infrastructure/Combince.Modules.Posts.Infrastructure.csproj" Id="f8b2e16d-fe53-468d-b562-c2cd93445b30" />

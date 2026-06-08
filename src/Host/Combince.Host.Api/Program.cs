@@ -7,6 +7,7 @@ using Combince.Shared.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Combince.Modules.Posts.Infrastructure;
+using Combince.Modules.PostComments.Infrastructure;
 using Combince.Modules.Ratings.Infrastructure;
 using Microsoft.OpenApi;
 using Serilog;
@@ -52,6 +53,7 @@ builder.Services.AddSwaggerGen(options =>
 builder.Services.AddSharedInfrastructure(builder.Configuration);
 builder.Services.AddUsersModule(builder.Configuration);
 builder.Services.AddPostsModule(builder.Configuration);
+builder.Services.AddPostCommentsModule(builder.Configuration);
 builder.Services.AddRatingsModule(builder.Configuration);
 builder.Services.AddSecurityInfrastructure(builder.Configuration);
 

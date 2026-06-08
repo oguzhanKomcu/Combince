@@ -27,6 +27,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Modules\PostComments\Combince.Modules.PostComments.Core\Combince.Modules.PostComments.Core.csproj" />
+    <ProjectReference Include="..\..\Modules\PostComments\Combince.Modules.Posts.Infrastructure\Combince.Modules.PostComments.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Posts\Combince.Modules.Posts.Infrastructure\Combince.Modules.Posts.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Ratings\Combince.Modules.Ratings.Infrastructure\Combince.Modules.Ratings.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Users\Combince.Modules.Users.Infrastructure\Combince.Modules.Users.Infrastructure.csproj" />
