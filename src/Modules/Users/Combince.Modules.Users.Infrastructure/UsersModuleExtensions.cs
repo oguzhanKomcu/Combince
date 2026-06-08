@@ -1,6 +1,5 @@
 ﻿using Combince.Modules.Users.Core.Abstractions;
 using Combince.Modules.Users.Core.Features.Users.Commands.RegisterUser;
-using Combince.Modules.Users.Infrastructure.Messaging;
 using Combince.Modules.Users.Infrastructure.Persistence;
 using Combince.Modules.Users.Infrastructure.PipelineBehaviors;
 using Combince.Modules.Users.Infrastructure.Security;
@@ -23,8 +22,9 @@ public static class UsersModuleExtensions
         services.AddScoped<IUsersDbContext>(provider => provider.GetRequiredService<UsersDbContext>());
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<IJwtTokenService, JwtTokenService>();
+        services.AddSingleton<ILocalizedMessageProvider, JsonMessageProvider>();
         services.AddScoped<IJwtTokenService, JwtTokenService>();
-        services.AddScoped<IEventBus, EventBus>();
+
 
         services.AddMediatR(cfg =>
         {
@@ -34,16 +34,6 @@ public static class UsersModuleExtensions
         });
 
         services.AddValidatorsFromAssembly(typeof(RegisterUserCommand).Assembly);
-
-        return services;
-    }
-    private static IServiceCollection AddMassTransitForModule(this IServiceCollection services)
-    {
-        services.AddMassTransit(x =>
-        {
-
-            x.AddConsumers(typeof(UsersModuleExtensions).Assembly);
-        });
 
         return services;
     }

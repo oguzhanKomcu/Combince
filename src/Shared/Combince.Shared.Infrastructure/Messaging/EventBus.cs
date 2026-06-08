@@ -1,7 +1,9 @@
-﻿using Combince.Modules.Users.Core.Abstractions;
+﻿using System.Threading;
+using System.Threading.Tasks;
+using Combince.Shared.Core.Abstractions;
 using MassTransit;
 
-namespace Combince.Modules.Users.Infrastructure.Messaging;
+namespace Combince.Shared.Infrastructure.Messaging;
 
 public class EventBus : IEventBus
 {

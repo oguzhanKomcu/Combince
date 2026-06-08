@@ -17,6 +17,11 @@
     "Posts": {
       "PostNotFound": "Güncellenmek istenen kombin bulunamadı.",
       "UnauthorizedPostAction": "Bu kombini güncelleme yetkiniz bulunmamaktadır."
+    },
+    "RatingsMessages": {
+      "PostNotFoundForRating": "Puan verilmek istenen kombin sistemde bulunamadı.",
+      "RatingSavedSuccessfully": "Puanınız başarıyla kaydedildi.",
+      "AlreadyRated": "Bu kombine daha önce zaten puan verdiniz."
     }
   },
   "ValidationMessages": {
@@ -37,6 +42,12 @@
     },
     "Posts": {
       "PostDescriptionNotEmpty": "Kombin açıklaması boş geçilemez."
+    },
+    "ValidationMessages": {
+      "Ratings": {
+        "RateScoreOutOfRange": "Puan değeri 1 ile 10 arasında olmalıdır.",
+        "PostIdNotEmpty": "Puan verilecek kombin kimliği (PostId) boş bırakılamaz."
+      }
     }
   }
 }

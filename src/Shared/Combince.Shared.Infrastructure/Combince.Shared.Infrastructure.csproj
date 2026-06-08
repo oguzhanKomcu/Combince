@@ -16,4 +16,8 @@
     <PackageReference Include="ZiggyCreatures.FusionCache.Serialization.NewtonsoftJson" Version="2.6.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Combince.Shared.Core\Combince.Shared.Core.csproj" />
+  </ItemGroup>
+
 </Project>

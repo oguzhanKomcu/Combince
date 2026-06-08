@@ -28,8 +28,7 @@ public class Post
         CreatedAt = DateTime.UtcNow;
         IsActive = true;
     }
-
-    public void UpdateCounters(double averageRating, int totalVotes)
+    public void UpdateRatingSummary(double averageRating, int totalVotes)
     {
         AverageRating = averageRating;
         TotalVotes = totalVotes;

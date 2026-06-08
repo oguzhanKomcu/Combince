@@ -20,11 +20,7 @@ public static class PostsModuleExtensions
 
         services.AddHttpContextAccessor();
         services.AddScoped<IMediaService, LocalMediaService>();
-
-        services.AddMassTransit(x =>
-        {
-            x.AddConsumers(typeof(PostsModuleExtensions).Assembly);
-        });
+        services.AddSingleton<ILocalizedMessageProvider, JsonMessageProvider>();
 
         services.AddMediatR(cfg =>
         {

@@ -7,6 +7,7 @@ using Combince.Shared.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Combince.Modules.Posts.Infrastructure;
+using Combince.Modules.Ratings.Infrastructure;
 using Microsoft.OpenApi;
 using Serilog;
 using System.Text;
@@ -21,7 +22,6 @@ Log.Logger = new LoggerConfiguration()
 builder.Host.UseSerilog();
 builder.Services.AddMemoryCache();
 builder.Services.AddScoped<ITokenBlacklistService, TokenBlacklistService>();
-builder.Services.AddSingleton<ILocalizedMessageProvider, JsonMessageProvider>();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Configuration.AddJsonFile("Configs/errors.json", optional: false, reloadOnChange: true);
@@ -49,22 +49,10 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-
-
 builder.Services.AddSharedInfrastructure(builder.Configuration);
-
 builder.Services.AddUsersModule(builder.Configuration);
 builder.Services.AddPostsModule(builder.Configuration);
-
-builder.Services.AddMassTransit(x =>
-{
-    x.SetKebabCaseEndpointNameFormatter();
-
-    x.UsingInMemory((context, cfg) =>
-    {
-        cfg.ConfigureEndpoints(context);
-    });
-});
+builder.Services.AddRatingsModule(builder.Configuration);
 builder.Services.AddSecurityInfrastructure(builder.Configuration);
 
 var app = builder.Build();

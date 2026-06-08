@@ -1,8 +1,11 @@
-﻿using Combince.Modules.Posts.Core.Abstractions;
+﻿using System;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
+using Combince.Modules.Posts.Core.Abstractions;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Processing;
+using SkiaSharp;
 
 namespace Combince.Modules.Posts.Infrastructure.Services;
 
@@ -27,19 +30,16 @@ public class LocalMediaService : IMediaService
             Directory.CreateDirectory(uploadsFolder);
         }
 
-        // Benzersiz dosya ismi oluşturma
         string fileExtension = Path.GetExtension(file.FileName).ToLower();
         string uniqueId = Guid.NewGuid().ToString();
         string mainFileName = $"{uniqueId}{fileExtension}";
         string filePath = Path.Combine(uploadsFolder, mainFileName);
 
-        // 1. Orijinal dosyayı olduğu gibi diske kaydet (Video veya Resim fark etmeksizin aslı korunsun)
         using (var fileStream = new FileStream(filePath, FileMode.Create))
         {
             await file.CopyToAsync(fileStream, cancellationToken);
         }
 
-        // 2. Eğer yüklenen dosya bir RESİM ise, arka planda hemen Thumbnail (Önizleme) versiyonunu üret
         bool isImage = file.ContentType.Contains("image") ||
                         fileExtension == ".jpg" ||
                         fileExtension == ".jpeg" ||
@@ -53,26 +53,31 @@ public class LocalMediaService : IMediaService
                 string thumbFileName = $"{uniqueId}_thumb{fileExtension}";
                 string thumbFilePath = Path.Combine(uploadsFolder, thumbFileName);
 
-                // ImageSharp ile resmi bellekten yükle
-                using (Image image = await Image.LoadAsync(file.OpenReadStream(), cancellationToken))
+                using var inputStream = file.OpenReadStream();
+                using var managedStream = new SKManagedStream(inputStream);
+                using var originalBitmap = SKBitmap.Decode(managedStream);
+
+                if (originalBitmap != null)
                 {
-                    // Resmi en-boy oranını koruyarak maksimum 400px genişliğe küçült (Telefonu kaslatmayan ideal boyut)
                     int width = 400;
-                    int height = (int)((double)image.Height / image.Width * width);
+                    int height = (int)((double)originalBitmap.Height / originalBitmap.Width * width);
 
-                    image.Mutate(x => x.Resize(width, height));
+                    using var resizedBitmap = originalBitmap.Resize(new SKImageInfo(width, height), SKFilterQuality.Medium);
+                    if (resizedBitmap != null)
+                    {
+                        using var image = SKImage.FromBitmap(resizedBitmap);
+                        using var data = image.Encode(SKEncodedImageFormat.Jpeg, 75);
+                        using var thumbStream = new FileStream(thumbFilePath, FileMode.Create);
 
-                    // Kalitesini %75'e optimize ederek (gözle görülür kayıp olmadan hafifletip) diske yaz
-                    await image.SaveAsync(thumbFilePath, cancellationToken);
+                        data.SaveTo(thumbStream);
+                    }
                 }
             }
             catch
             {
-                // Resim işleme esnasında olası bir hatada thumbnail üretilemezse sistem çökmesin, loglanabilir.
             }
         }
 
-        // 3. İstek atan istemciye (React Native) sunucu üzerindeki tam URL'ini dön
         var request = _httpContextAccessor.HttpContext?.Request;
         var baseUrl = $"{request?.Scheme}://{request?.Host}";
 
@@ -89,12 +94,10 @@ public class LocalMediaService : IMediaService
             string webRoot = _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
             string fullPath = Path.Combine(webRoot, uri.LocalPath.TrimStart('/'));
 
-            // Orijinal dosyayı sil
             if (File.Exists(fullPath))
             {
                 File.Delete(fullPath);
 
-                // Eğer resimse ve thumbnail versiyonu varsa onu da temizle
                 string directory = Path.GetDirectoryName(fullPath) ?? string.Empty;
                 string fileNameWithoutExt = Path.GetFileNameWithoutExtension(fullPath);
                 string ext = Path.GetExtension(fullPath);
@@ -110,7 +113,6 @@ public class LocalMediaService : IMediaService
         }
         catch
         {
-            // Loglanabilir
         }
         return Task.FromResult(false);
     }

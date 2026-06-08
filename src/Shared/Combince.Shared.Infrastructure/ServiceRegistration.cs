@@ -1,7 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Combince.Shared.Core.Abstractions;
+using Combince.Shared.Infrastructure.Messaging;
+using MassTransit;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using MassTransit;
 using MongoDB.Driver;
 using StackExchange.Redis;
 using ZiggyCreatures.Caching.Fusion; // Güncel namespace yapısı
@@ -12,6 +14,8 @@ public static class ServiceRegistration
 {
     public static IServiceCollection AddSharedInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
+
+        services.AddScoped<IEventBus, EventBus>();
         // 1. SQL Server Altyapısı
         var mssqlConnectionString = configuration.GetConnectionString("DefaultConnection");
 

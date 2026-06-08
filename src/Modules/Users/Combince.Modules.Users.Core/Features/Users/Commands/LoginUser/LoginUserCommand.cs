@@ -2,6 +2,7 @@
 using Combince.Modules.Users.Core.Abstractions;
 using Combince.Modules.Users.Core.Common;
 using Combince.Modules.Users.Core.Events;
+using Combince.Shared.Core.Abstractions;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

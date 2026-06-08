@@ -1,4 +1,7 @@
-﻿namespace Combince.Modules.Users.Core.Abstractions;
+﻿using System.Threading;
+using System.Threading.Tasks;
+
+namespace Combince.Shared.Core.Abstractions;
 
 public interface IEventBus
 {

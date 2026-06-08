@@ -7,9 +7,9 @@ using System.Text;
 
 namespace Combince.Modules.Users.Infrastructure.Persistence
 {
-    public  class UsersDbContext : DbContext, IUsersDbContext
+    public class UsersDbContext : DbContext, IUsersDbContext
     {
-        public UsersDbContext(DbContextOptions options) : base(options)
+        public UsersDbContext(DbContextOptions<UsersDbContext> options) : base(options)
         {
         }
 
@@ -38,7 +38,7 @@ namespace Combince.Modules.Users.Infrastructure.Persistence
 
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Id)
-                      .ValueGeneratedOnAdd(); 
+                      .ValueGeneratedOnAdd();
 
                 entity.Property(e => e.Token).IsRequired();
 
@@ -47,7 +47,6 @@ namespace Combince.Modules.Users.Infrastructure.Persistence
                     .HasForeignKey(e => e.UserId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
-
 
             modelBuilder.Entity<User>()
                 .Navigation(b => b.RefreshTokens)
