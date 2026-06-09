@@ -22,6 +22,9 @@
       "PostNotFoundForRating": "Puan verilmek istenen kombin sistemde bulunamadı.",
       "RatingSavedSuccessfully": "Puanınız başarıyla kaydedildi.",
       "AlreadyRated": "Bu kombine daha önce zaten puan verdiniz."
+    },
+    "Social": {
+      "AlreadyFollowingThisUser": "Bu kullanıcıyı zaten takip ediyorsunuz."
     }
   },
   "ValidationMessages": {
@@ -53,6 +56,11 @@
     "Ratings": {
       "RateScoreOutOfRange": "Puan değeri 1 ile 10 arasında olmalıdır.",
       "PostIdNotEmpty": "Puan verilecek kombin kimliği (PostId) boş bırakılamaz."
+    },
+    "Social": {
+      "FollowerIdRequired": "Takip eden kullanıcı kimliği boş olamaz.",
+      "FollowingIdRequired": "Takip edilen kullanıcı kimliği boş olamaz.",
+      "CannotFollowYourself": "Kullanıcı kendisini takip edemez."
     }
   }
 }

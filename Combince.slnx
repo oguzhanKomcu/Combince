@@ -23,6 +23,10 @@
     <Project Path="src/Modules/Ratings/Combince.Modules.Ratings.Core/Combince.Modules.Ratings.Core.csproj" Id="4bd69220-6bfe-458a-82bc-0717e4ae0ec9" />
     <Project Path="src/Modules/Ratings/Combince.Modules.Ratings.Infrastructure/Combince.Modules.Ratings.Infrastructure.csproj" Id="61179461-5394-47df-af66-89e294e546b1" />
   </Folder>
+  <Folder Name="/src/Modules/Social/">
+    <Project Path="src/Modules/Social/Combince.Modules.Social.Core/Combince.Modules.Social.Core.csproj" Id="fde6d46d-0e66-4f3f-af66-577888f8f971" />
+    <Project Path="src/Modules/Social/Combince.Modules.Social.Infrastructure/Combince.Modules.Social.Infrastructure.csproj" Id="363dbbcc-5642-4da7-88b0-00befced05a6" />
+  </Folder>
   <Folder Name="/src/Modules/Users/">
     <Project Path="src/Modules/Users/Combince.Modules.Users.Core/Combince.Modules.Users.Core.csproj" Id="f592cf7b-cfa4-44dd-a0b5-e7271f8a8951" />
     <Project Path="src/Modules/Users/Combince.Modules.Users.Infrastructure/Combince.Modules.Users.Infrastructure.csproj" Id="95f862f9-f77e-47e9-90df-fea636e04399" />
