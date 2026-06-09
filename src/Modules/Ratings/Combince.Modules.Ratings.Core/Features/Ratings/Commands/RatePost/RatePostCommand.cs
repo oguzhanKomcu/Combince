@@ -39,7 +39,7 @@ public class RatePostCommandHandler : IRequestHandler<RatePostCommand, Result<Ra
 
         if (existingRating != null)
         {
-            var alreadyRatedMessage = _messageProvider.GetMessage("UserMessages", "RatingsMessages:AlreadyRated");
+            var alreadyRatedMessage = _messageProvider.GetMessage("UserMessages", "Ratings:AlreadyRated");
             return Result<RatingSuccessResponse>.Failure(alreadyRatedMessage, System.Net.HttpStatusCode.BadRequest);
         }
 
@@ -62,7 +62,7 @@ public class RatePostCommandHandler : IRequestHandler<RatePostCommand, Result<Ra
             totalVotes
         ), cancellationToken);
 
-        var successMessage = _messageProvider.GetMessage("UserMessages", "RatingsMessages:RatingSavedSuccessfully");
+        var successMessage = _messageProvider.GetMessage("UserMessages", "Ratings:RatingSavedSuccessfully");
 
         return Result<RatingSuccessResponse>.Success(new RatingSuccessResponse(successMessage, true));
     }

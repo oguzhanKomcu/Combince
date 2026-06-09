@@ -43,11 +43,16 @@
     "Posts": {
       "PostDescriptionNotEmpty": "Kombin açıklaması boş geçilemez."
     },
-    "ValidationMessages": {
-      "Ratings": {
-        "RateScoreOutOfRange": "Puan değeri 1 ile 10 arasında olmalıdır.",
-        "PostIdNotEmpty": "Puan verilecek kombin kimliği (PostId) boş bırakılamaz."
-      }
+    "PostComments": {
+      "CommentContentNotEmpty": "Yorum alanı boş bırakılamaz.",
+      "CommentContentMaxLength": "Yorum en fazla 500 karakter olabilir.",
+      "PostIdNotEmpty": "Yorum yapılacak kombin kimliği boş olamaz.",
+      "PageNumberGreaterThanZero": "Sayfa numarası 0'dan büyük olmalıdır.",
+      "PageSizeRangeInvalid": "Sayfa başına kayıt sayısı 1 ile 50 arasında olmalıdır."
+    },
+    "Ratings": {
+      "RateScoreOutOfRange": "Puan değeri 1 ile 10 arasında olmalıdır.",
+      "PostIdNotEmpty": "Puan verilecek kombin kimliği (PostId) boş bırakılamaz."
     }
   }
 }

@@ -1,9 +1,11 @@
 ﻿using Combince.Modules.Ratings.Core.Features.Ratings.Commands.RatePost;
+using Combince.Modules.Ratings.Core.Common; // Ratings modülünün kendi Result namespace'i
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System;
+using System.Net;
 using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
@@ -22,6 +24,11 @@ public class RatingsController : ControllerBase
         _mediator = mediator;
     }
 
+    /// <summary>
+    /// Bir kombine puan verir veya mevcut puanı günceller.
+    /// </summary>
+    /// <param name="request">Puanlanacak postun kimliği ve skor değerini barındıran istek modeli.</param>
+    /// <param name="cancellationToken">İşlem iptal edildiğinde asenkron akışı sonlandıracak iptal token'ı.</param>
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -37,14 +44,33 @@ public class RatingsController : ControllerBase
 
         var command = new RatePostCommand(request.PostId, userId, request.Score);
         var result = await _mediator.Send(command, cancellationToken);
+        return ProcessResult(result);
+    }
 
-        if (!result.IsSuccess)
+    /// <summary>
+    /// Geriye generic bir veri modeli (Value) dönen Result sonuçlarını işler.
+    /// </summary>
+    private IActionResult ProcessResult<T>(Result<T> result)
+    {
+        if (result.IsSuccess)
         {
-            return StatusCode((int)result.StatusCode, result.Error);
+            if (result.Value is bool || result.Value == null)
+            {
+                return Ok();
+            }
+            return Ok(result.Value);
         }
 
-        return Ok(result.Value);
+        return result.StatusCode switch
+        {
+            HttpStatusCode.NotFound => NotFound(result.Error),
+            HttpStatusCode.BadRequest => BadRequest(result.Error),
+            HttpStatusCode.Unauthorized => Unauthorized(result.Error),
+            HttpStatusCode.Forbidden => Forbid(),
+            _ => StatusCode((int)result.StatusCode, result.Error)
+        };
     }
+
 }
 
 public record RatePostRequest(Guid PostId, int Score);
