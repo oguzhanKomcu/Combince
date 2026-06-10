@@ -25,7 +25,8 @@ public class User
     public string? Bio { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public bool IsActive { get; private set; }
-
+    public int FollowersCount { get; set; } = 0;
+    public int FollowingCount { get; set; } = 0;
     private readonly List<UserRefreshToken> _refreshTokens = new();
     public IReadOnlyCollection<UserRefreshToken> RefreshTokens => _refreshTokens.AsReadOnly();
 

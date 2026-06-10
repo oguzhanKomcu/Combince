@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\Shared\Combince.Shared.Infrastructure\Combince.Shared.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Social\Combince.Modules.Social.Core\Combince.Modules.Social.Core.csproj" />
     <ProjectReference Include="..\Combince.Modules.Users.Core\Combince.Modules.Users.Core.csproj" />
   </ItemGroup>
 

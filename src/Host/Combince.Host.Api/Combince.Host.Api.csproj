@@ -31,6 +31,7 @@
     <ProjectReference Include="..\..\Modules\PostComments\Combince.Modules.Posts.Infrastructure\Combince.Modules.PostComments.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Posts\Combince.Modules.Posts.Infrastructure\Combince.Modules.Posts.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Ratings\Combince.Modules.Ratings.Infrastructure\Combince.Modules.Ratings.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Social\Combince.Modules.Social.Core\Combince.Modules.Social.Core.csproj" />
     <ProjectReference Include="..\..\Modules\Users\Combince.Modules.Users.Infrastructure\Combince.Modules.Users.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Shared\Combince.Shared.Infrastructure\Combince.Shared.Infrastructure.csproj" />
   </ItemGroup>

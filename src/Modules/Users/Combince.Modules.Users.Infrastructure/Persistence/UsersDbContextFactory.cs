@@ -1,4 +1,5 @@
-﻿using Combince.Modules.Users.Infrastructure.Persistence;
+﻿using System.IO;
+using Combince.Modules.Users.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
@@ -16,12 +17,21 @@ public class UsersDbContextFactory : IDesignTimeDbContextFactory<UsersDbContext>
             basePath = Path.Combine(Directory.GetCurrentDirectory(), "src", "Host", "Combince.Host.Api");
         }
 
-        IConfigurationRoot configuration = new ConfigurationBuilder()
-            .SetBasePath(basePath)
-            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-            .Build();
+        string connectionString;
 
-        var connectionString = configuration.GetConnectionString("DefaultConnection");
+        if (Directory.Exists(basePath) && File.Exists(Path.Combine(basePath, "appsettings.json")))
+        {
+            IConfigurationRoot configuration = new ConfigurationBuilder()
+                .SetBasePath(basePath)
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                .Build();
+
+            connectionString = configuration.GetConnectionString("DefaultConnection");
+        }
+        else
+        {
+            connectionString = "Server=localhost,1433;Database=CombinceDb;User Id=sa;Password=CombincePassword123!;TrustServerCertificate=True;";
+        }
 
         var optionsBuilder = new DbContextOptionsBuilder<UsersDbContext>();
         optionsBuilder.UseSqlServer(connectionString);

@@ -8,5 +8,6 @@ namespace Combince.Modules.Social.Core.Abstractions;
 public interface ISocialDbContext
 {
     DbSet<Follow> Follows { get; }
+    DbSet<SocialUser> SocialUsers  { get; }
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }

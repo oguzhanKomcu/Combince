@@ -1,13 +1,15 @@
-﻿using System;
+﻿using Combince.Modules.Users.Core.Abstractions;
+using Combince.Modules.Users.Core.Common;
+using Combince.Modules.Users.Core.Entities;
+using Combince.Shared.Core.Events.Modules.User;
+using FluentValidation;
+using MassTransit;
+using MediatR;
+using Microsoft.EntityFrameworkCore;
+using System;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using Combince.Modules.Users.Core.Abstractions;
-using Combince.Modules.Users.Core.Common;
-using Combince.Modules.Users.Core.Entities;
-using FluentValidation;
-using MediatR;
-using Microsoft.EntityFrameworkCore;
 
 namespace Combince.Modules.Users.Core.Features.Users.Commands.RegisterUser;
 
@@ -41,15 +43,18 @@ public class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommand, R
     private readonly IUsersDbContext _context;
     private readonly IPasswordHasher _passwordHasher;
     private readonly ILocalizedMessageProvider _messageProvider;
+    private readonly IPublishEndpoint _publishEndpoint; 
 
     public RegisterUserCommandHandler(
         IUsersDbContext context,
         IPasswordHasher passwordHasher,
-        ILocalizedMessageProvider messageProvider)
+        ILocalizedMessageProvider messageProvider,
+        IPublishEndpoint publishEndpoint) 
     {
         _context = context;
         _passwordHasher = passwordHasher;
         _messageProvider = messageProvider;
+        _publishEndpoint = publishEndpoint; 
     }
 
     public async Task<Result<Guid>> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
@@ -85,6 +90,12 @@ public class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommand, R
 
         _context.Users.Add(user);
         await _context.SaveChangesAsync(cancellationToken);
+
+        await _publishEndpoint.Publish(new UserRegisteredIntegrationEvent(
+            user.Id,
+            user.Username,
+            user.ProfilePictureUrl ?? string.Empty
+        ), cancellationToken);
 
         return Result<Guid>.Success(user.Id);
     }

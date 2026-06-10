@@ -1,5 +1,6 @@
 ﻿using Combince.Modules.Users.Core.Abstractions;
 using Combince.Modules.Users.Core.Features.Users.Commands.RegisterUser;
+using Combince.Modules.Users.Infrastructure.Consumers;
 using Combince.Modules.Users.Infrastructure.Persistence;
 using Combince.Modules.Users.Infrastructure.PipelineBehaviors;
 using Combince.Modules.Users.Infrastructure.Security;
@@ -23,13 +24,21 @@ public static class UsersModuleExtensions
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddSingleton<ILocalizedMessageProvider, JsonMessageProvider>();
-        services.AddScoped<IJwtTokenService, JwtTokenService>();
 
+        // MassTransit Yapılandırması (In-Memory Transport)
+        services.AddMassTransit(x =>
+        {
+            x.AddConsumer<UserFollowedConsumer>();
+            x.AddConsumer<UserUnfollowedConsumer>();
+            x.UsingInMemory((context, cfg) =>
+            {
+                cfg.ConfigureEndpoints(context);
+            });
+        });
 
         services.AddMediatR(cfg =>
         {
             cfg.RegisterServicesFromAssembly(typeof(RegisterUserCommand).Assembly);
-
             cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
         });
 

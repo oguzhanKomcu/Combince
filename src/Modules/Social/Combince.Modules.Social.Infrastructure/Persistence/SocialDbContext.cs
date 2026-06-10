@@ -9,6 +9,7 @@ public class SocialDbContext : DbContext, ISocialDbContext
     public SocialDbContext(DbContextOptions<SocialDbContext> options) : base(options) { }
 
     public DbSet<Follow> Follows => Set<Follow>();
+    public DbSet<SocialUser> SocialUsers => Set<SocialUser>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -22,6 +23,14 @@ public class SocialDbContext : DbContext, ISocialDbContext
             builder.Property(f => f.FollowerId).IsRequired();
             builder.Property(f => f.FollowingId).IsRequired();
             builder.Property(f => f.CreatedAt).IsRequired();
+        });
+
+        modelBuilder.Entity<SocialUser>(builder =>
+        {
+            builder.ToTable("SocialUsers");
+            builder.HasKey(u => u.UserId); 
+            builder.Property(u => u.Username).IsRequired().HasMaxLength(50);
+            builder.Property(u => u.ProfilePictureUrl).HasMaxLength(500);
         });
 
         base.OnModelCreating(modelBuilder);

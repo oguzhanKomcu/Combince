@@ -1,7 +1,10 @@
 ﻿using Combince.Modules.Social.Core.Abstractions;
 using Combince.Modules.Social.Core.Features.Follows.Commands.FollowUser;
+using Combince.Modules.Social.Core.Features.Follows.Commands.UnfollowUser;
+using Combince.Modules.Social.Infrastructure.Consumers;
 using Combince.Modules.Social.Infrastructure.Persistence;
 using FluentValidation;
+using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,13 +19,19 @@ public static class SocialModuleExtensions
             options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
 
         services.AddScoped<ISocialDbContext>(provider => provider.GetRequiredService<SocialDbContext>());
+        services.AddMassTransit(x =>
+        {
 
+            x.AddConsumer<UserRegisteredIntegrationConsumer>();
+        });
         services.AddMediatR(cfg =>
         {
             cfg.RegisterServicesFromAssembly(typeof(FollowUserCommand).Assembly);
+            cfg.RegisterServicesFromAssembly(typeof(UnfollowUserCommand).Assembly);
         });
 
         services.AddValidatorsFromAssembly(typeof(FollowUserCommand).Assembly);
+        services.AddValidatorsFromAssembly(typeof(UnfollowUserCommand).Assembly);
 
         return services;
     }
