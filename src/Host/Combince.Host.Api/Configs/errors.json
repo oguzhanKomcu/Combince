@@ -62,5 +62,26 @@
       "FollowingIdRequired": "Takip edilen kullanıcı kimliği boş olamaz.",
       "CannotFollowYourself": "Kullanıcı kendisini takip edemez."
     }
+  },
+  "Errors": {
+    "System": {
+      "InternalServerError": "Sistemde beklenmeyen bir hata oluştu. Lütfen daha sonra tekrar deneyiniz.",
+      "DatabaseTimeout": "Veritabanı yanıt vermedi. Lütfen isteğinizi tekrar edin.",
+      "ServiceUnavailable": "İlgili modül servisine şu anda ulaşılamıyor.",
+      "NetworkError": "Ağ bağlantısı sırasında bir hata oluştu."
+    },
+    "MassTransit": {
+      "MessagePublishFailed": "Entegrasyon olayı fırlatılamadı, mesaj kuyruğu bağlantısını kontrol edin.",
+      "ConsumerTimeout": "Mesaj işleme süresi doldu (Timeout).",
+      "EventMappingError": "Gelen entegrasyon mesajı haritalanamadı."
+    },
+    "Validation": {
+      "GeneralValidationError": "Gönderilen veriler doğrulamadan geçemedi.",
+      "InvalidRequestBody": "Geçersiz veya bozuk istek gövdesi (Request Body)."
+    },
+    "Infrastructure": {
+      "FileNotFound": "İstenen statik dosya veya asset sistemde bulunamadı.",
+      "StorageUploadFailed": "Dosya yükleme (storage) işlemi başarısız oldu."
+    }
   }
 }

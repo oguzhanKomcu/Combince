@@ -1,4 +1,5 @@
-﻿using Combince.Shared.Core.Abstractions;
+﻿using Combince.Modules.Social.Infrastructure.Consumers;
+using Combince.Shared.Core.Abstractions;
 using Combince.Shared.Infrastructure.Messaging;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
@@ -46,6 +47,9 @@ public static class ServiceRegistration
         // 4. MassTransit In-Memory Event Bus Ayarı
         services.AddMassTransit(x =>
         {
+            x.AddConsumer<UserRegisteredIntegrationConsumer>();
+            x.AddConsumer<Combince.Modules.Users.Infrastructure.Consumers.UserFollowedConsumer>();
+            x.AddConsumer<Combince.Modules.Users.Infrastructure.Consumers.UserUnfollowedConsumer>();
             // Tüm assembly'leri körü körüne taramak yerine, sadece "Combince" ile başlayan projeleri tara diyoruz
             x.AddConsumers(AppDomain.CurrentDomain.GetAssemblies()
                 .Where(a => a.FullName != null && a.FullName.StartsWith("Combince"))

@@ -43,38 +43,40 @@ public class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommand, R
     private readonly IUsersDbContext _context;
     private readonly IPasswordHasher _passwordHasher;
     private readonly ILocalizedMessageProvider _messageProvider;
-    private readonly IPublishEndpoint _publishEndpoint; 
+    private readonly IPublishEndpoint _publishEndpoint;
+    private readonly IUserValidationService _validationService;
 
     public RegisterUserCommandHandler(
         IUsersDbContext context,
         IPasswordHasher passwordHasher,
         ILocalizedMessageProvider messageProvider,
-        IPublishEndpoint publishEndpoint) 
+        IPublishEndpoint publishEndpoint,
+        IUserValidationService validationService) 
     {
         _context = context;
         _passwordHasher = passwordHasher;
         _messageProvider = messageProvider;
-        _publishEndpoint = publishEndpoint; 
+        _publishEndpoint = publishEndpoint;
+        _validationService = validationService;
     }
 
     public async Task<Result<Guid>> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
     {
-        var isEmailUnique = await _context.Users
-            .AllAsync(u => u.Email != request.Email, cancellationToken);
-
-        if (!isEmailUnique)
+        if (!await _validationService.IsEmailAvailableAsync(request.Email, cancellationToken))
         {
             var emailExistsMsg = _messageProvider.GetUserMessage("Users:EmailAlreadyExists");
             return Result<Guid>.Failure(emailExistsMsg, HttpStatusCode.BadRequest);
         }
 
-        var isUsernameUnique = await _context.Users
-            .AllAsync(u => u.Username != request.Username, cancellationToken);
-
-        if (!isUsernameUnique)
+        if (!await _validationService.IsUsernameAvailableAsync(request.Username, cancellationToken))
         {
             var usernameExistsMsg = _messageProvider.GetUserMessage("Users:UsernameAlreadyTaken");
             return Result<Guid>.Failure(usernameExistsMsg, HttpStatusCode.BadRequest);
+        }
+
+        if (!_validationService.IsPasswordStrongEnough(request.Password, out var passwordError))
+        {
+            return Result<Guid>.Failure(passwordError!, HttpStatusCode.BadRequest);
         }
 
         var hashedPassword = _passwordHasher.HashPassword(request.Password);
@@ -82,11 +84,16 @@ public class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommand, R
 
         var user = new User(
             id: userId,
-            email: request.Email.Trim().ToLowerScope(),
-            username: request.Username.Trim().ToLowerScope(),
+            email: request.Email.ToLowerScope(),
+            username: request.Username.ToLowerScope(),
             passwordHash: hashedPassword,
             fullName: request.FullName?.Trim()
         );
+
+
+        var finalProfilePicture = string.IsNullOrWhiteSpace(user.ProfilePictureUrl)
+            ? "/assets/images/default-avatar.png"
+            : user.ProfilePictureUrl;
 
         _context.Users.Add(user);
         await _context.SaveChangesAsync(cancellationToken);
@@ -94,8 +101,7 @@ public class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommand, R
         await _publishEndpoint.Publish(new UserRegisteredIntegrationEvent(
             user.Id,
             user.Username,
-            user.ProfilePictureUrl ?? string.Empty
-        ), cancellationToken);
+            finalProfilePicture));
 
         return Result<Guid>.Success(user.Id);
     }

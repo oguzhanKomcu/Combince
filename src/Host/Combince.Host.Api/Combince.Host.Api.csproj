@@ -10,7 +10,6 @@
   <ItemGroup>
     <PackageReference Include="Hangfire.AspNetCore" Version="1.8.23" />
     <PackageReference Include="Hangfire.SqlServer" Version="1.8.23" />
-    <PackageReference Include="MassTransit" Version="9.1.2" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.8" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.8">
       <PrivateAssets>all</PrivateAssets>
@@ -32,6 +31,7 @@
     <ProjectReference Include="..\..\Modules\Posts\Combince.Modules.Posts.Infrastructure\Combince.Modules.Posts.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Ratings\Combince.Modules.Ratings.Infrastructure\Combince.Modules.Ratings.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Social\Combince.Modules.Social.Core\Combince.Modules.Social.Core.csproj" />
+    <ProjectReference Include="..\..\Modules\Social\Combince.Modules.Social.Infrastructure\Combince.Modules.Social.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Users\Combince.Modules.Users.Infrastructure\Combince.Modules.Users.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Shared\Combince.Shared.Infrastructure\Combince.Shared.Infrastructure.csproj" />
   </ItemGroup>

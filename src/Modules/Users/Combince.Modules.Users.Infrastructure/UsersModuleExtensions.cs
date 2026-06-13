@@ -25,16 +25,6 @@ public static class UsersModuleExtensions
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddSingleton<ILocalizedMessageProvider, JsonMessageProvider>();
 
-        // MassTransit Yapılandırması (In-Memory Transport)
-        services.AddMassTransit(x =>
-        {
-            x.AddConsumer<UserFollowedConsumer>();
-            x.AddConsumer<UserUnfollowedConsumer>();
-            x.UsingInMemory((context, cfg) =>
-            {
-                cfg.ConfigureEndpoints(context);
-            });
-        });
 
         services.AddMediatR(cfg =>
         {

@@ -9,6 +9,7 @@ using Microsoft.IdentityModel.Tokens;
 using Combince.Modules.Posts.Infrastructure;
 using Combince.Modules.PostComments.Infrastructure;
 using Combince.Modules.Ratings.Infrastructure;
+using Combince.Modules.Social.Infrastructure;
 using Microsoft.OpenApi;
 using Serilog;
 using System.Text;
@@ -55,6 +56,7 @@ builder.Services.AddUsersModule(builder.Configuration);
 builder.Services.AddPostsModule(builder.Configuration);
 builder.Services.AddPostCommentsModule(builder.Configuration);
 builder.Services.AddRatingsModule(builder.Configuration);
+builder.Services.AddSocialModule(builder.Configuration);
 builder.Services.AddSecurityInfrastructure(builder.Configuration);
 
 var app = builder.Build();
