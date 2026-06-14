@@ -9,5 +9,6 @@ public interface ISocialDbContext
 {
     DbSet<Follow> Follows { get; }
     DbSet<SocialUser> SocialUsers  { get; }
+    DbSet<SavedPost> SavedPosts  { get; }
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }

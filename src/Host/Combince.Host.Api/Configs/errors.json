@@ -24,7 +24,10 @@
       "AlreadyRated": "Bu kombine daha önce zaten puan verdiniz."
     },
     "Social": {
-      "AlreadyFollowingThisUser": "Bu kullanıcıyı zaten takip ediyorsunuz."
+      "AlreadyFollowingThisUser": "Bu kullanıcıyı zaten takip ediyorsunuz.",
+      "AlreadySavedThisPost": "Bu kombini zaten kaydettiniz.",
+      "SavedPostNotFound": "Kaydedilen kombin bulunamadı.",
+      "CommentNotFound": "İlgili yorum bulunamadı veya silinmiş."
     }
   },
   "ValidationMessages": {
@@ -60,7 +63,10 @@
     "Social": {
       "FollowerIdRequired": "Takip eden kullanıcı kimliği boş olamaz.",
       "FollowingIdRequired": "Takip edilen kullanıcı kimliği boş olamaz.",
-      "CannotFollowYourself": "Kullanıcı kendisini takip edemez."
+      "CannotFollowYourself": "Kullanıcı kendisini takip edemez.",
+      "PostIdRequired": "Kaydedilecek kombin kimliği boş bırakılamaz.",
+      "PageNumberGreaterThanZero": "Sayfa numarası 0'dan büyük olmalıdır.",
+      "PageSizeRangeInvalid": "Sayfa başına kayıt sayısı 1 ile 50 arasında olmalıdır."
     }
   },
   "Errors": {

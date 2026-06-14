@@ -24,7 +24,7 @@ public static class UsersModuleExtensions
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddSingleton<ILocalizedMessageProvider, JsonMessageProvider>();
-
+        services.AddScoped<IUserValidationService, UserValidationService>();
 
         services.AddMediatR(cfg =>
         {
